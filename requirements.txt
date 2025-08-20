@@ -40,6 +40,6 @@ Pillow
 # Desenvolvimento e documentação
 drf-yasg
 drf-spectacular
-django-debug-toolbar'
+django-debug-toolbar
 pytest
 pytest-django
