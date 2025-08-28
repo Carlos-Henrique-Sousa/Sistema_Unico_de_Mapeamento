@@ -9,7 +9,7 @@ class LoginSerilizer(serializers.Serializer):
     def validate(self, data):
         user = authenticate(username=data['identifier'], password=data['password'])
         if not user:
-            raise serializers.ValidationError("Identificador ou senha inválidos.")
+            raise serializers.ValidationError("Senha ou Identificador inválidos.")
         data['user'] = user
         return data
 

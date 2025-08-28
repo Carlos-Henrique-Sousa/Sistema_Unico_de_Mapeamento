@@ -11,11 +11,11 @@ class UsuarioQuerySet(models.QuerySet):
         return self.filter(is_active=True)
 
     def por_tipo(self, tipo):
-        return self.ativos().filter(tipo=tipo)
+        return self.ativos().filter(user_type=tipo)
     
 
 class User(AbstractUser):
-    TYPES = [
+    USER_TYPES = [
         ('admin', 'Admin'),
         ('escola', 'Escola'),
         ('professor', 'Professor'),
@@ -54,9 +54,9 @@ class User(AbstractUser):
         blank=True,
     )
 
-    type = models.CharField(
+    user_types = models.CharField(
         max_length=60,
-        choices=TYPES,
+        choices=USER_TYPES,
         db_index=True,
     )
 
@@ -89,27 +89,20 @@ class User(AbstractUser):
         verbose_name=_('histórico')
     )
 
-    group = models.ForeignKey(
-        Group,
-        on_delete=models.CASCADE,
-        blank=True,
-        null=True,
-        verbose_name=_('grupo'),
-        related_name='core_usuario_set_groups',
-    )
-
-    user_permissions = models.ManyToManyField(
-        Permission,
-        blank=True,
-        verbose_name=_('permissões de usuário'),
-        related_name='core_usuario_set_permissions',
-    )
-
     groups = models.ManyToManyField(
         Group,
         verbose_name=_('groups'),
         blank=True,
         help_text=_('The groups this user belongs to.'),
+        related_name="core_user_set",
+        related_query_name="core_user",
+    )
+
+    user_permissions = models.ManyToManyField(
+        Permission,
+        verbose_name=_('user permissions'),
+        blank=True,
+        help_text=_('Specific permissions for this user.'),
         related_name="core_user_set",
         related_query_name="core_user",
     )
