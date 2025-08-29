@@ -13,8 +13,42 @@ class UsuarioQuerySet(models.QuerySet):
     def por_tipo(self, tipo):
         return self.ativos().filter(user_type=tipo)
     
+class ManageUser(BaseUserManager.from_queryset(UsuarioQuerySet)):
+    def create_user(self, identifier, password=None, **extra_fields):
+        if not identifier:
+            raise ValueError('o identificador deve ser definido')
+        
+        identifier = self.normalize_username(identifier)
 
-class User(AbstractUser):
+        user_model = self.model(UsuarioQuerySet, identificador=identifier, **extra_fields)
+        user_model.set_password(password)
+        user_model.save(using=self._db)
+        return user_model
+    
+    def create_regular_user(self, identifier, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', False)
+        extra_fields.setdefault('is_superuser', False)
+        return self.create_user(identifier, password, **extra_fields)
+    
+    def create_superuser(self, identifier, password=None, **extra_fields):
+        """
+            Fazer um compativel com o django, sendo passado um 'username
+        """
+        if 'username' in extra_fields:
+            identifier = extra_fields.pop('username')
+
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('user_type', 'admin')
+
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
+
+        return self._create_user(identifier, password, **extra_fields)
+
+class User(AbstractUser, ManageUser):
     USER_TYPES = [
         ('admin', 'Admin'),
         ('escola', 'Escola'),
@@ -54,7 +88,7 @@ class User(AbstractUser):
         blank=True,
     )
 
-    user_types = models.CharField(
+    user_type = models.CharField(
         max_length=60,
         choices=USER_TYPES,
         db_index=True,
@@ -107,40 +141,17 @@ class User(AbstractUser):
         related_query_name="core_user",
     )
 
-    USERNAME_FIELD = 'identifier'
+    username = None
     REQUIRED_FIELDS = []
 
-    def __str__(self):
-        return f"{self.get_tipo_display()} | {self.identifier}"
+    objects = ManageUser()
 
-    def tipo_display(self):
+    def __str__(self):
+        return f"{self.user_type_display()} | {self.identifier}"
+
+    def user_type_display(self):
         return dict(self.TIPOS).get(self.tipo, 'Desconhecido')
 
     def get_prefix(self):
         return self.identifier[0] if self.identifier else None
-    
-class ManageUser(BaseUserManager.from_queryset(UsuarioQuerySet)):
-    def create_user(self, identifier, password=None, **extra_fields):
-        if not identifier:
-            raise ValueError('o identificador deve ser4 definido')
-        user_model = self.model(UsuarioQuerySet, identificador=identifier, **extra_fields)
-        user_model.set_password(password)
-        user_model.save(using=self._db)
-        return user_model
-    
-    def config_user(self, identifier, password=None, **extra_fields):
-        extra_fields.setdefault('is_staff', False)
-        extra_fields.setdefault('is_superuser', False)
-        return self.create_user(identifier, password, **extra_fields)
-    
-    def create_superuser(self, identifier, password=None, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-
-        if extra_fields.get('is_staff') is not True:
-            raise ValueError('Superuser must have is_staff=True.')
-        if extra_fields.get('is_superuser') is not True:
-            raise ValueError('Superuser must have is_superuser=True.')
-
-        return self.create_user(identifier, password, **extra_fields)
 

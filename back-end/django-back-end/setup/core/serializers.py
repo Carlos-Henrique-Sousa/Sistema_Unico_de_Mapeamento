@@ -6,12 +6,25 @@ class LoginSerilizer(serializers.Serializer):
     identifier = serializers.CharField(max_length=20, required=True)
     password = serializers.CharField(write_only=True, required=True)
 
-    def validate(self, data):
-        user = authenticate(username=data['identifier'], password=data['password'])
-        if not user:
-            raise serializers.ValidationError("Senha ou Identificador inválidos.")
-        data['user'] = user
-        return data
+    def validate(self, attrs):
+        identifier = attrs.get('identifier')
+        password = attrs.get('password')
+
+        if identifier and password:
+            user = authenticate(
+                request = self.context.get('request'),
+                identifier = identifier,
+                password = password
+            )
+
+            if not user:
+                raise serializers.ValidationError('Não foi possível fazer o login com as credenciais fornecidas.', code='authorization')
+            
+            if not user.is_active:
+                raise serializers.ValidationError('Usuário desativado.', code='authorization')
+            
+            attrs['user'] = user
+            return attrs
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

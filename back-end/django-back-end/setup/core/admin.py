@@ -1,31 +1,38 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from simple_history.admin import SimpleHistoryAdmin
-from .models import Usuario
+from .models import User
+from django.utils.translation import gettext_lazy as _
 
-@admin.register(Usuario)
-class UsuarioAdmin(DjangoUserAdmin, SimpleHistoryAdmin):
-    list_display = ('identificador', 'nome', 'tipo', 'is_active', 'is_staff', 'created_at')
-    list_filter = ('tipo', 'is_active', 'is_staff')
-    search_fields = ('identificador', 'nome', 'email')
+@admin.register(User)
+class UserAdmin(DjangoUserAdmin, SimpleHistoryAdmin):
+    list_display = ('identifier', 'nome', 'user_types', 'is_active', 'is_staff', 'created_at')
+    list_filter = ('user_types', 'is_active', 'is_staff')
+    search_fields = ('identifier', 'nome', 'email')
     ordering = ('created_at',)
 
     fieldsets = (
-        (None, {'fields': ('identificador', 'senha')}),
-        ('Informações Pessoais', {'fields': ('nome', 'email', 'tipo', 'metadata')}),
+        (None, {'fields': ('identifier', 'password')}),
+        ('Informações Pessoais', {'fields': ('nome', 'email', 'user_types', 'metadata')}),
         ('Permissões', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
         ('Timestamps', {'fields': ('created_at', 'updated_at')}),
     )
-    readonly_fields = ('created_at', 'updated_at')
+    
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('identifier', 'nome', 'password1', 'password2', 'email', 'user_types')
+        })
+    )
 
-    actions = ['ativar_usuarios', 'desativar_usuarios']
+    def ativar_user(self, request, queryset):
+        updated = queryset.update(is_active=True)
+        self.message_user(request, f"{updated} User ativado com sucesso.")
 
-    def ativar_usuarios(self, queryset):
-        queryset.update(is_active=True)
+    ativar_user.short_description = "Ativar usuários selecionados"
 
-    ativar_usuarios.short_description = "Ativar usuários selecionados"
-
-    def desativar_usuarios(self, queryset):
-        queryset.update(is_active=False)
+    def desativar_user(self, request, queryset):
+        updated = queryset.update(is_active=True)
+        self.message_user(request, f"{updated} User ativado com sucesso.")
         
-    desativar_usuarios.short_description = "Desativar usuários selecionados"
+    desativar_user.short_description = "Desativar usuários selecionados"
