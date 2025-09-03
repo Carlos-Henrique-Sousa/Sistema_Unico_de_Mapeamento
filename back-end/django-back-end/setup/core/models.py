@@ -6,62 +6,63 @@ from django.utils.translation import gettext_lazy as _
 from simple_history.models import HistoricalRecords
 from django.db.models import JSONField
 
+
 class UsuarioQuerySet(models.QuerySet):
     def ativos(self):
         return self.filter(is_active=True)
 
     def por_tipo(self, tipo):
         return self.ativos().filter(user_type=tipo)
-    
-class ManageUser(BaseUserManager.from_queryset(UsuarioQuerySet)):
-    def create_user(self, identifier, password=None, **extra_fields):
+
+
+class ManageUser(BaseUserManager):
+    use_in_migrations = True
+
+    def _create_user(self, identifier, password, **extra_fields):
         if not identifier:
-            raise ValueError('o identificador deve ser definido')
-        
-        identifier = self.normalize_username(identifier)
+            raise ValueError(_('O identificador deve ser definido'))
 
-        user_model = self.model(UsuarioQuerySet, identificador=identifier, **extra_fields)
-        user_model.set_password(password)
-        user_model.save(using=self._db)
-        return user_model
-    
-    def create_regular_user(self, identifier, password=None, **extra_fields):
-        extra_fields.setdefault('is_staff', False)
-        extra_fields.setdefault('is_superuser', False)
-        return self.create_user(identifier, password, **extra_fields)
-    
-    def create_superuser(self, identifier, password=None, **extra_fields):
-        """
-            Fazer um compativel com o django, sendo passado um 'username
-        """
-        if 'username' in extra_fields:
-            identifier = extra_fields.pop('username')
+        user = self.model(identifier=identifier, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
 
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('user_type', 'admin')
-
-        if extra_fields.get('is_staff') is not True:
-            raise ValueError('Superuser must have is_staff=True.')
-        if extra_fields.get('is_superuser') is not True:
-            raise ValueError('Superuser must have is_superuser=True.')
-
+    def create_user(self, identifier, password=None, **extra_fields):
+        extra_fields.setdefault("is_staff", False)
+        extra_fields.setdefault("is_superuser", False)
         return self._create_user(identifier, password, **extra_fields)
 
-class User(AbstractUser, ManageUser):
+    def create_superuser(self, identifier, email=None, password=None, **extra_fields):
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+        extra_fields.setdefault("user_type", "admin")
+
+        if extra_fields.get("is_staff") is not True:
+            raise ValueError(_("Superuser must have is_staff=True."))
+        if extra_fields.get("is_superuser") is not True:
+            raise ValueError(_("Superuser must have is_superuser=True."))
+
+        return self._create_user(identifier, password, email=email, **extra_fields)
+
+
+# Atribui o QuerySet ao Manager
+ManageUser = ManageUser.from_queryset(UsuarioQuerySet)
+
+
+class User(AbstractUser):
     USER_TYPES = [
-        ('admin', 'Admin'),
-        ('escola', 'Escola'),
-        ('professor', 'Professor'),
-        ('aluno', 'Aluno'),
-        ('responsavel', 'Responsavel'),
+        ("admin", "Admin"),
+        ("escola", "Escola"),
+        ("professor", "Professor"),
+        ("aluno", "Aluno"),
+        ("responsavel", "Responsável"),
     ]
 
     id = models.UUIDField(
         primary_key=True,
         editable=False,
         unique=True,
-        default=uuid.uuid4
+        default=uuid.uuid4,
     )
 
     identifier = models.CharField(
@@ -69,23 +70,26 @@ class User(AbstractUser, ManageUser):
         unique=True,
         validators=[
             RegexValidator(
-                regex=r'^[a-zA-Z0-9#@_-]+$',
-                message=_('O identificador deve conter apenas caracteres alfanuméricos, #, @, _ ou -.'),
-                code='invalid_identifier'
+                regex=r"^[a-zA-Z0-9#@_-]+$",
+                message=_(
+                    "O identificador deve conter apenas caracteres alfanuméricos, #, @, _ ou -."
+                ),
+                code="invalid_identifier",
             )
-        ]
+        ],
     )
 
     email = models.EmailField(
         max_length=255,
         unique=True,
         blank=True,
-        null=True
+        null=True,
     )
-    
+
     nome = models.CharField(
         max_length=255,
         blank=True,
+        verbose_name=_("nome de exibição"),
     )
 
     user_type = models.CharField(
@@ -96,62 +100,61 @@ class User(AbstractUser, ManageUser):
 
     is_active = models.BooleanField(
         default=True,
-        verbose_name=_('ativo')
+        verbose_name=_("ativo"),
     )
 
     is_staff = models.BooleanField(
         default=False,
     )
-    
+
     metadata = JSONField(
         blank=True,
         null=True,
-        verbose_name=_('metadados'),
+        verbose_name=_("metadados"),
     )
 
     created_at = models.DateTimeField(
         auto_now_add=True,
-        verbose_name=_('criado em'),
-    )
-    
-    updated_at = models.DateTimeField(
-        auto_now=True,
-        verbose_name=_('atualizado em'),
+        verbose_name=_("criado em"),
     )
 
-    history = HistoricalRecords(
-        verbose_name=_('histórico')
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name=_("atualizado em"),
     )
+
+    history = HistoricalRecords(verbose_name=_("histórico"))
 
     groups = models.ManyToManyField(
         Group,
-        verbose_name=_('groups'),
+        verbose_name=_("groups"),
         blank=True,
-        help_text=_('The groups this user belongs to.'),
+        help_text=_("The groups this user belongs to."),
         related_name="core_user_set",
         related_query_name="core_user",
     )
 
     user_permissions = models.ManyToManyField(
         Permission,
-        verbose_name=_('user permissions'),
+        verbose_name=_("user permissions"),
         blank=True,
-        help_text=_('Specific permissions for this user.'),
+        help_text=_("Specific permissions for this user."),
         related_name="core_user_set",
         related_query_name="core_user",
     )
 
+    # Remove username herdado do AbstractUser
     username = None
-    REQUIRED_FIELDS = []
+    USERNAME_FIELD = "identifier"
+    REQUIRED_FIELDS = ["email", "user_type"]
 
     objects = ManageUser()
 
     def __str__(self):
-        return f"{self.user_type_display()} | {self.identifier}"
+        return f"{self.get_user_type_display()} | {self.identifier}"
 
-    def user_type_display(self):
-        return dict(self.TIPOS).get(self.tipo, 'Desconhecido')
+    def get_user_type_display(self):
+        return dict(self.USER_TYPES).get(self.user_type, "Desconhecido")
 
     def get_prefix(self):
         return self.identifier[0] if self.identifier else None
-

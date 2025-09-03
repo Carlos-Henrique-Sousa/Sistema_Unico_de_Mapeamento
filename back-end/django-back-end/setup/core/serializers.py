@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import User
 from django.contrib.auth import authenticate
 
-class LoginSerilizer(serializers.Serializer):
+class LoginSerializer(serializers.Serializer):
     identifier = serializers.CharField(max_length=20, required=True)
     password = serializers.CharField(write_only=True, required=True)
 
@@ -13,7 +13,7 @@ class LoginSerilizer(serializers.Serializer):
         if identifier and password:
             user = authenticate(
                 request = self.context.get('request'),
-                identifier = identifier,
+                username = identifier,
                 password = password
             )
 
@@ -34,7 +34,7 @@ class UserSerializer(serializers.ModelSerializer):
             'identifier',
             'email',
             'nome',
-            'type',
+            'user_type',
             'metadata'
         ]
         read_only_fields = ['id', 'is_active', 'is_staff', 'is_superuser']
