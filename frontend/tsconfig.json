@@ -29,7 +29,9 @@
       "@types/*": ["./src/types/*"],
       "@assets/*": ["./src/assets/*"],
       "@models/*": ["./src/assets/models/*"],
-      "@shaders/*": ["./src/shaders/*"]
+      "@shaders/*": ["./src/shaders/*"],
+      "@shared/*": ["./src/shared/*"],
+      "@/shared/*": ["./src/shared/*"]
     },
 
     /* Vue Specific */

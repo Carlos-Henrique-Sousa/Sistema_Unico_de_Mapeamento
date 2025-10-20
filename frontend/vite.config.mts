@@ -97,7 +97,10 @@ export default defineConfig(async () => {
         '@assets': path.resolve(__dirname, 'src/assets'),
         '@models': path.resolve(__dirname, 'src/assets/models'),
         '@shaders': path.resolve(__dirname, 'src/shaders'),
-        '@shared': path.resolve(__dirname, 'src/shared'),
+  // Shared components live under src/shared (some files import as @shared or @/shared)
+  '@shared': path.resolve(__dirname, 'src/shared'),
+  // Support imports that use the @/shared/ prefix
+  '@/shared': path.resolve(__dirname, 'src/shared'),
       },
     },
     build: {
