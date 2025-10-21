@@ -74,7 +74,7 @@ class CurrentUserView(APIView):
         return Response(serializer.data)
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])  # Mudado para AllowAny para permitir logout sem token válido
 def logout_view(request):
     """Logout - invalida o token refresh"""
     try:
@@ -83,6 +83,6 @@ def logout_view(request):
             token = RefreshToken(refresh_token)
             token.blacklist()
             return Response({'message': 'Logout realizado com sucesso'}, status=status.HTTP_200_OK)
-        return Response({'error': 'Refresh token não fornecido'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'message': 'Logout realizado com sucesso'}, status=status.HTTP_200_OK)  # Sempre retorna sucesso
     except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'message': 'Logout realizado com sucesso'}, status=status.HTTP_200_OK)  # Sempre retorna sucesso

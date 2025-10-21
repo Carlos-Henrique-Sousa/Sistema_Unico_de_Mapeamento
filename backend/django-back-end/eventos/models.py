@@ -7,7 +7,7 @@ class Evento(models.Model):
     escola = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        limit_choices_to={'tipo': 'escola'},
+        limit_choices_to={'user_type': 'escola'},
         related_name='eventos'
     )
     titulo = models.CharField(max_length=200)

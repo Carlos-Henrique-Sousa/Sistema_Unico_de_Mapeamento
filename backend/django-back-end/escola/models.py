@@ -3,7 +3,7 @@ from core.models import User
 from simple_history.models import HistoricalRecords
 
 class Escola(models.Model):
-    usuario = models.OneToOneField(User, on_delete=models.CASCADE, limit_choices_to={'tipo': 'escola'})
+    usuario = models.OneToOneField(User, on_delete=models.CASCADE, limit_choices_to={'user_type': 'escola'})
     cnpj = models.CharField(max_length=18, unique=True)
     nome = models.CharField(max_length=200, blank=True)
     endereco = models.TextField(blank=True)

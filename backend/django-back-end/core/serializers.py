@@ -11,10 +11,11 @@ class LoginSerializer(serializers.Serializer):
         password = attrs.get('password')
 
         if identifier and password:
+            # Para o modelo User customizado, usamos identifier como username
             user = authenticate(
-                request = self.context.get('request'),
-                username = identifier,
-                password = password
+                request=self.context.get('request'),
+                username=identifier,
+                password=password
             )
 
             if not user:
