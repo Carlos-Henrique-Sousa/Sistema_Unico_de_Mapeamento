@@ -69,6 +69,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/admin/DatabaseManager.vue'),
         meta: { title: 'Gerenciamento do Banco de Dados' }
       },
+      {
+        path: 'status',
+        name: 'admin-status',
+        component: () => import('@/views/admin/SystemStatusView.vue'),
+        meta: { title: 'Status do Sistema' }
+      },
     ]
   },
 

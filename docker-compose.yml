@@ -1,5 +1,4 @@
 # Docker Compose Simples para S.U.M
-version: '3.8'
 
 services:
   # Banco de dados PostgreSQL

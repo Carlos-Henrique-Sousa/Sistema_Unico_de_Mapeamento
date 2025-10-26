@@ -55,6 +55,8 @@ export default defineConfig(async () => {
         },
         workbox: {
           maximumFileSizeToCacheInBytes: 5000000,
+          navigateFallback: '/index.html',
+          navigateFallbackDenylist: [/^\/api\//, /^\/admin\//, /^\/static\//],
           runtimeCaching: [
             {
               urlPattern: /\.(glb|gltf)$/,
@@ -74,7 +76,18 @@ export default defineConfig(async () => {
                 backgroundSync: { name: 'api-queue', options: { maxRetentionTime: 60 * 60 } },
               },
             },
+            {
+              urlPattern: /\/admin\/.*/,
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'admin-cache',
+                networkTimeoutSeconds: 5,
+                expiration: { maxEntries: 10, maxAgeSeconds: 60 * 5 },
+              },
+            },
           ],
+          skipWaiting: true,
+          clientsClaim: true,
         },
         devOptions: { enabled: true, type: 'module', navigateFallback: 'index.html' },
       }),
