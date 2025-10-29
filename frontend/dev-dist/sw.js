@@ -78,13 +78,16 @@ define(['./workbox-782a37bc'], (function (workbox) { 'use strict';
    * See https://goo.gl/S9QRab
    */
   workbox.precacheAndRoute([{
+    "url": "registerSW.js",
+    "revision": "3ca0b8505b4bec776b69afdba2768812"
+  }, {
     "url": "/index.html",
-    "revision": "0.bmpifu592n8"
+    "revision": "0.u557tgbg8eg"
   }], {});
   workbox.cleanupOutdatedCaches();
   workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("/index.html"), {
     allowlist: [/^\/$/],
-    denylist: [/^\/api\//, /^\/admin\//, /^\/static\//]
+    denylist: [/^\/api\//, /^\/static\//]
   }));
   workbox.registerRoute(/\.(glb|gltf)$/, new workbox.CacheFirst({
     "cacheName": "3d-models-cache",
@@ -101,14 +104,6 @@ define(['./workbox-782a37bc'], (function (workbox) { 'use strict';
       maxAgeSeconds: 7200
     }), new workbox.BackgroundSyncPlugin("api-queue", {
       maxRetentionTime: 3600
-    })]
-  }), 'GET');
-  workbox.registerRoute(/\/admin\/.*/, new workbox.NetworkFirst({
-    "cacheName": "admin-cache",
-    "networkTimeoutSeconds": 5,
-    plugins: [new workbox.ExpirationPlugin({
-      maxEntries: 10,
-      maxAgeSeconds: 300
     })]
   }), 'GET');
 

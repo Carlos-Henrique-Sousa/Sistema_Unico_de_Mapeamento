@@ -1,4 +1,5 @@
 from django.http import JsonResponse
+from django.shortcuts import render
 from django.db import connection
 from django.core.cache import cache
 from django.conf import settings
@@ -72,3 +73,39 @@ def api_info(request):
         "documentation": "/api/docs/",
         "admin": "/admin/",
     })
+
+def custom_admin_view(request):
+    """
+    View personalizada para o painel administrativo
+    """
+    return render(request, 'admin/custom_admin.html')
+
+def api_documentation_view(request):
+    """
+    View para a documentação da API
+    """
+    return render(request, 'api/documentation.html')
+
+def system_status_view(request):
+    """
+    View para o status do sistema
+    """
+    return render(request, 'status/system_status.html')
+
+def custom_404_view(request, exception=None):
+    """
+    View personalizada para erro 404
+    """
+    return render(request, 'errors/404.html', status=404)
+
+def custom_500_view(request):
+    """
+    View personalizada para erro 500
+    """
+    return render(request, 'errors/500.html', status=500)
+
+def generic_error_view(request, exception=None):
+    """
+    View genérica para outros erros
+    """
+    return render(request, 'errors/generic_error.html', status=500)

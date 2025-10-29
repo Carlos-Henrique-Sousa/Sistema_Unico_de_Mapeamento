@@ -15,36 +15,28 @@ const routes: RouteRecordRaw[] = [
     }
   },
   
-  // Rotas de Autenticação
+  // Redireciono rotas antigas de autenticação para a nova entrada
+  { path: '/auth/:rest(.*)*', redirect: '/entrar', meta: { public: true } },
+
+  // Entrada e seleção de perfis
   {
-    path: '/auth',
-    name: 'auth',
-    redirect: '/auth/login',
-    meta: { public: true, layout: 'AuthLayout' },
-    children: [
-      {
-        path: 'login',
-        name: 'login',
-        component: () => import('@/views/auth/LoginView.vue'),
-        meta: { title: 'Acessar Plataforma' }
-      },
-      {
-        path: 'register',
-        name: 'register',
-        component: () => import('@/views/auth/RegisterView.vue'),
-        meta: { title: 'Criar Conta' }
-      },
-      {
-        path: 'profile-setup',
-        name: 'profile-setup',
-        component: () => import('@/views/auth/ProfileSetupView.vue'),
-        meta: { 
-          title: 'Complete seu Perfil',
-          requiresAuth: true
-        }
-      }
-    ]
+    path: '/entrar',
+    name: 'entrar',
+    component: () => import('@/views/auth/RoleSelectView.vue'),
+    meta: { title: 'Entrar no Sistema', public: true }
   },
+  {
+    path: '/entrar/gestao',
+    name: 'entrar-gestao',
+    component: () => import('@/views/auth/ManagementSelectView.vue'),
+    meta: { title: 'Acessos de Gestão', public: true }
+  },
+
+  // Logins por perfil
+  { path: '/login/aluno', name: 'login-aluno', component: () => import('@/views/auth/LoginAluno.vue'), meta: { title: 'Login do Estudante', public: true } },
+  { path: '/login/professor', name: 'login-professor', component: () => import('@/views/auth/LoginProfessor.vue'), meta: { title: 'Login do Professor', public: true } },
+  { path: '/login/escola', name: 'login-escola', component: () => import('@/views/auth/LoginEscola.vue'), meta: { title: 'Login da Escola', public: true } },
+  { path: '/login/admin', name: 'login-admin', component: () => import('@/views/auth/LoginAdmin.vue'), meta: { title: 'Login do Admin', public: true } },
 
   // Rotas do Admin
   {

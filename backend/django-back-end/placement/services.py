@@ -8,7 +8,6 @@ from django.db.models import Q, F
 from collections import defaultdict
 import random
 from estudantes.models import Estudante
-from placement.models import MapeamentoSala, PosicaoAluno
 import logging
 
 logger = logging.getLogger(__name__)
@@ -19,7 +18,8 @@ class IAMapeamentoSala:
     Serviço de IA para organização inteligente de salas de aula
     """
     
-    def __init__(self, mapeamento: MapeamentoSala):
+    def __init__(self, mapeamento):
+        from .models import MapeamentoSala
         self.mapeamento = mapeamento
         self.turma = mapeamento.turma
         self.criterios = mapeamento.criterios_ia
@@ -351,10 +351,11 @@ class OtimizadorMapeamento:
     """
     
     @staticmethod
-    def otimizar_posicionamento(mapeamento: MapeamentoSala, iteracoes: int = 100) -> List[Dict[str, Any]]:
+    def otimizar_posicionamento(mapeamento, iteracoes: int = 100) -> List[Dict[str, Any]]:
         """
         Otimiza posicionamento usando algoritmos genéticos
         """
+        from .models import PosicaoAluno
         logger.info(f"Otimizando mapeamento {mapeamento.nome}")
         
         # Obter posições atuais
@@ -375,7 +376,7 @@ class OtimizadorMapeamento:
         return melhor_layout
     
     @staticmethod
-    def _calcular_score(posicoes: List[PosicaoAluno]) -> float:
+    def _calcular_score(posicoes) -> float:
         """
         Calcula score de qualidade do layout
         """
@@ -401,7 +402,7 @@ class OtimizadorMapeamento:
         return score
     
     @staticmethod
-    def _mutar_layout(posicoes: List[PosicaoAluno]) -> List[PosicaoAluno]:
+    def _mutar_layout(posicoes) -> List:
         """
         Cria variação do layout trocando duas posições aleatoriamente
         """
@@ -427,10 +428,11 @@ class ValidacaoMapeamento:
     """
     
     @staticmethod
-    def validar_layout(mapeamento: MapeamentoSala) -> Dict[str, Any]:
+    def validar_layout(mapeamento) -> Dict[str, Any]:
         """
         Valida o layout e retorna problemas encontrados
         """
+        from .models import PosicaoAluno
         problemas = []
         avisos = []
         
@@ -478,10 +480,11 @@ class EstatisticasMapeamento:
     """
     
     @staticmethod
-    def gerar_estatisticas(mapeamento: MapeamentoSala) -> Dict[str, Any]:
+    def gerar_estatisticas(mapeamento) -> Dict[str, Any]:
         """
         Gera estatísticas detalhadas do mapeamento
         """
+        from .models import PosicaoAluno
         posicoes = PosicaoAluno.objects.filter(mapeamento=mapeamento).select_related('estudante')
         
         stats = {
@@ -514,3 +517,44 @@ class EstatisticasMapeamento:
         stats['taxa_ocupacao'] = (stats['total_alunos'] / capacidade * 100) if capacidade > 0 else 0
         
         return stats
+
+
+def gerar_novo_mapeamento(turma, escola, nome="Mapeamento Automático", linhas=4, colunas=5):
+    """
+    Função principal para gerar um novo mapeamento de sala
+    """
+    from .models import MapeamentoSala, PosicaoAluno
+    from escola.models import Turma
+    
+    # Criar o mapeamento
+    mapeamento = MapeamentoSala.objects.create(
+        nome=nome,
+        turma=turma,
+        escola=escola,
+        linhas=linhas,
+        colunas=colunas,
+        tipo_agrupamento='DUPLA',
+        numero_pessoas_grupo=2,
+        criterios_ia={
+            'considerar_dificuldades': True,
+            'considerar_notas': False,
+            'considerar_altura': True,
+            'considerar_lideranca': True
+        }
+    )
+    
+    # Usar IA para organizar
+    ia_service = IAMapeamentoSala(mapeamento)
+    posicoes_sugeridas = ia_service.organizar_automaticamente()
+    
+    # Criar posições dos alunos
+    for posicao_data in posicoes_sugeridas:
+        PosicaoAluno.objects.create(
+            mapeamento=mapeamento,
+            estudante=posicao_data['estudante'],
+            linha=posicao_data['linha'],
+            coluna=posicao_data['coluna'],
+            grupo=posicao_data.get('grupo', 0)
+        )
+    
+    return mapeamento

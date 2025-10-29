@@ -1,285 +1,322 @@
-# S.U.M - Sistema Unificado de Mapeamento
+# S.U.M - Sistema Único de Mapeamento
 
-Uma plataforma educacional inovadora para mapeamento inteligente de salas de aula, desenvolvida com Django (backend) e Vue.js (frontend).
+Sistema educacional completo com backend Django, frontend Vue.js e banco PostgreSQL, projetado para mapeamento inteligente de salas de aula e gestão educacional.
 
 ## 🚀 Início Rápido
 
-### 🐳 Configuração com Docker (Recomendado)
+### Pré-requisitos
 
+- Docker Desktop instalado
+- Docker Compose instalado
+- Git instalado
+
+### Instalação Automática
+
+#### Linux/macOS:
 ```bash
-# Clone o repositório
+chmod +x setup.sh
+./setup.sh
+```
+
+#### Windows:
+```cmd
+setup.bat
+```
+
+### Instalação Manual
+
+1. **Clone o repositório:**
+```bash
 git clone <seu-repositorio>
-cd S.U.M/Sistema_Unico_de_Mapeamento
-
-# Iniciar todos os serviços
-docker-compose up --build
-
-# Ou usar o script de teste automático
-# Linux/Mac: ./test_integration.sh
-# Windows: test_integration.bat
+cd Sistema_Unico_de_Mapeamento
 ```
 
-### 🔧 Configuração Manual (Desenvolvimento)
-
+2. **Configure o ambiente:**
 ```bash
-# Clone o repositório
-git clone <seu-repositorio>
-cd S.U.M/Sistema_Unico_de_Mapeamento
+# Copie o arquivo de configuração
+cp backend/django-back-end/env.local backend/django-back-end/.env
 
-# Backend
-cd backend/django-back-end
-pip install -r ../requirements.txt
-python manage.py migrate
-python manage.py runserver
-
-# Frontend (em outro terminal)
-cd frontend
-npm install
-npm run dev
+# Edite as configurações se necessário
+nano backend/django-back-end/.env
 ```
 
-### Configuração Manual
-
-#### 1. Backend (Django)
-
+3. **Inicie os serviços:**
 ```bash
-cd backend/django-back-end
-
-# Instale as dependências
-pip install -r ../requirements.txt
-
-# Configure o ambiente
-cp env.example .env
-# Edite o arquivo .env conforme necessário
-
-# Execute as migrações
-python manage.py makemigrations
-python manage.py migrate
-
-# Crie um superusuário
-python manage.py createsuperuser
-
-# Inicie o servidor
-python manage.py runserver
+docker-compose up -d
 ```
 
-#### 2. Frontend (Vue.js)
-
+4. **Aguarde a inicialização completa:**
 ```bash
-cd frontend
+# Verifique os logs
+docker-compose logs -f
 
-# Instale as dependências
-npm install
-
-# Configure o ambiente
-cp env.example .env.local
-# Edite o arquivo .env.local conforme necessário
-
-# Inicie o servidor de desenvolvimento
-npm run dev
+# Verifique o status
+docker-compose ps
 ```
 
-## 🗄️ Banco de Dados
+## 📋 Informações de Acesso
 
-### SQLite (Desenvolvimento/Testes)
-- **Configuração**: Automática via `settings.py`
-- **Arquivo**: `backend/django-back-end/db.sqlite3`
-- **Testes**: Banco em memória (`:memory:`)
+- **Frontend:** http://localhost:5173
+- **Backend API:** http://localhost:8000
+- **Admin Django:** http://localhost:8000/admin
+- **Nginx (Proxy):** http://localhost:80
 
-### PostgreSQL (Produção)
-- **Configuração**: Via variável `DATABASE_URL` no `.env`
-- **Exemplo**: `DATABASE_URL=postgresql://user:password@localhost:5432/sum_db`
+### Credenciais Padrão
 
-## 🔧 Configuração de Ambiente
+- **Usuário:** admin
+- **Senha:** admin123
+- **Email:** admin@sum.local
 
-### Backend (.env)
+## 🏗️ Arquitetura do Sistema
+
+### Backend (Django)
+- **Framework:** Django 4.2+ com Django REST Framework
+- **Autenticação:** JWT (Simple JWT)
+- **Banco de Dados:** PostgreSQL 15
+- **Cache:** Redis (opcional)
+- **IA:** Integração OpenAI para geração de atividades
+
+### Frontend (Vue.js)
+- **Framework:** Vue 3 com Composition API
+- **Build Tool:** Vite
+- **UI:** Tailwind CSS
+- **Estado:** Pinia
+- **Roteamento:** Vue Router 4
+- **PWA:** Service Worker com Workbox
+
+### Banco de Dados
+- **PostgreSQL 15** com configurações otimizadas
+- **Encoding:** UTF-8
+- **Locale:** pt_BR.UTF-8
+- **Timezone:** America/Sao_Paulo
+
+### Proxy Reverso
+- **Nginx** configurado para roteamento inteligente
+- **Load Balancing** entre frontend e backend
+- **Cache** para arquivos estáticos
+
+## 🔧 Configuração Avançada
+
+### Variáveis de Ambiente
+
+Crie um arquivo `.env` em `backend/django-back-end/`:
+
 ```env
-SECRET_KEY=sua-chave-secreta-aqui
+# Configurações do Django
 DEBUG=True
-DATABASE_URL=sqlite:///db.sqlite3
+SECRET_KEY=sua-chave-secreta-aqui
+ALLOWED_HOSTS=localhost,127.0.0.1,backend,nginx
+
+# Banco de Dados
+DATABASE_URL=postgresql://sum_user:sum_password@db:5432/sum_db
+
+# CORS
 CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:8080
+
+# IA (Opcional)
+OPENAI_API_KEY=sua-chave-openai-aqui
+
+# Logging
+LOG_LEVEL=INFO
 ```
 
-### Frontend (.env.local)
+### Configuração do Frontend
+
+Crie um arquivo `.env` em `frontend/`:
+
 ```env
 VITE_API_URL=http://localhost:8000
 VITE_API_TIMEOUT=10000
-VITE_NODE_ENV=development
 ```
 
-## 🧪 Testes
+## 📊 Monitoramento
 
-### Teste de Conexão
+### Health Checks
+
+- **Backend:** http://localhost:8000/api/health/
+- **Detalhado:** http://localhost:8000/api/auth/health/detailed/
+- **Métricas:** http://localhost:8000/api/auth/metrics/
+
+### Logs
+
 ```bash
-python test_connection.py
-```
-
-### Testes Unitários
-```bash
-# Backend
-cd backend/django-back-end
-python manage.py test
-
-# Frontend
-cd frontend
-npm run test:unit
-```
-
-### Testes com Docker
-```bash
-docker-compose -f docker-compose.test.yml up --build
-```
-
-## 🐳 Docker
-
-### 🚀 Desenvolvimento (Integração Completa)
-```bash
-# Inicia todos os serviços com Nginx como proxy reverso
-docker-compose up --build
-
-# Parar todos os serviços
-docker-compose down
-
-# Ver logs em tempo real
+# Todos os serviços
 docker-compose logs -f
 
-# Status dos serviços
+# Serviço específico
+docker-compose logs -f backend
+docker-compose logs -f frontend
+docker-compose logs -f db
+docker-compose logs -f nginx
+```
+
+### Status dos Serviços
+
+```bash
 docker-compose ps
 ```
-
-### 🔧 Comandos Úteis
-```bash
-# Executar comandos no backend
-docker-compose exec backend python manage.py migrate
-docker-compose exec backend python manage.py createsuperuser
-
-# Executar comandos no frontend
-docker-compose exec frontend npm install
-
-# Reiniciar um serviço específico
-docker-compose restart backend
-docker-compose restart frontend
-```
-
-## 📡 API Endpoints
-
-- **Health Check**: `GET /api/health/`
-- **API Info**: `GET /api/info/`
-- **Escola**: `/api/escola/`
-- **Estudantes**: `/api/estudantes/`
-- **Professores**: `/api/professores/`
-- **Atividades**: `/api/atividades/`
-- **Eventos**: `/api/eventos/`
-- **Mapeamento**: `/api/mapeamento/`
-
-## 🏗️ Arquitetura
-
-### 🌐 Arquitetura com Nginx (Docker)
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        Nginx (Porta 80)                    │
-│                    Proxy Reverso Principal                 │
-└─────────────────┬───────────────────────────────────────────┘
-                  │
-    ┌─────────────┼─────────────┐
-    │             │             │
-┌───▼───┐    ┌───▼───┐    ┌───▼───┐
-│Frontend│    │Backend│    │  DB   │
-│Vue.js  │    │Django │    │PostgreSQL│
-│:5173   │    │:8000  │    │:5432  │
-└────────┘    └───────┘    └───────┘
-```
-
-### 📁 Estrutura Simplificada
-
-```
-Sistema_Unico_de_Mapeamento/
-├── docker-compose.yml         # Configuração principal
-├── backend/
-│   ├── dockerfile            # Container Django
-│   └── django-back-end/      # Código Django
-├── frontend/
-│   ├── dockerfile            # Container Vue.js
-│   └── src/                  # Código Vue.js
-├── nginx/
-│   └── nginx.conf            # Configuração proxy
-└── docs/                     # Documentação
-```
-
-## 🔐 Autenticação
-
-- **JWT Tokens**: Autenticação stateless
-- **Refresh Tokens**: Renovação automática
-- **CORS**: Configurado para desenvolvimento
-- **Guardião**: Permissões por objeto
-
-## 🎯 Funcionalidades
-
-- **Mapeamento 3D**: Visualização interativa de salas
-- **Gestão de Usuários**: Estudantes, professores e administradores
-- **Sistema de Atividades**: Criação e gerenciamento
-- **IA Integrada**: Geração automática de conteúdo
-- **PWA**: Aplicação web progressiva
-- **Responsivo**: Interface adaptável
 
 ## 🛠️ Desenvolvimento
 
-### Comandos Essenciais
+### Estrutura do Projeto
+
+```
+Sistema_Unico_de_Mapeamento/
+├── backend/
+│   └── django-back-end/
+│       ├── core/           # Autenticação e usuários
+│       ├── escola/         # Gestão escolar
+│       ├── estudantes/     # Gestão de estudantes
+│       ├── professores/    # Gestão de professores
+│       ├── atividades/     # Atividades e avaliações
+│       ├── eventos/        # Eventos escolares
+│       ├── placement/      # Mapeamento e IA
+│       └── setup/          # Configurações Django
+├── frontend/
+│   └── src/
+│       ├── components/      # Componentes Vue
+│       ├── views/          # Páginas
+│       ├── services/        # Serviços API
+│       ├── store/          # Estado Pinia
+│       └── types/          # Tipos TypeScript
+├── nginx/
+│   └── nginx.conf          # Configuração Nginx
+└── docker-compose.yml      # Orquestração Docker
+```
+
+### Comandos Úteis
 
 ```bash
-# Iniciar sistema completo
-docker-compose up --build
-
-# Parar sistema
-docker-compose down
-
-# Ver logs
-docker-compose logs -f
+# Entrar no container do backend
+docker-compose exec backend bash
 
 # Executar migrações
-docker-compose exec backend python manage.py migrate
+docker-compose exec backend python django-back-end/manage.py migrate
 
 # Criar superusuário
-docker-compose exec backend python manage.py createsuperuser
+docker-compose exec backend python django-back-end/manage.py shell -c "from core.models import User; User.objects.create_superuser('admin', 'admin@sum.local', 'admin123', user_type='admin')"
+
+# Coletar arquivos estáticos
+docker-compose exec backend python django-back-end/manage.py collectstatic
+
+# Entrar no container do frontend
+docker-compose exec frontend sh
+
+# Instalar dependências do frontend
+docker-compose exec frontend npm install
+
+# Executar testes
+docker-compose exec backend python django-back-end/manage.py test
 ```
 
-## 📝 Logs e Monitoramento
+## 🔒 Segurança
+
+### Produção
+
+1. **Altere a SECRET_KEY:**
+```python
+SECRET_KEY = 'sua-chave-super-secreta-aqui'
+```
+
+2. **Configure HTTPS:**
+```nginx
+# Adicione certificados SSL no nginx.conf
+```
+
+3. **Restrinja ALLOWED_HOSTS:**
+```python
+ALLOWED_HOSTS = ['seu-dominio.com']
+```
+
+4. **Configure CORS adequadamente:**
+```python
+CORS_ALLOWED_ORIGINS = ['https://seu-dominio.com']
+```
+
+## 🐛 Troubleshooting
+
+### Problemas Comuns
+
+1. **Porta já em uso:**
+```bash
+# Verifique processos usando as portas
+netstat -tulpn | grep :80
+netstat -tulpn | grep :8000
+netstat -tulpn | grep :5173
+```
+
+2. **Banco não conecta:**
+```bash
+# Verifique logs do PostgreSQL
+docker-compose logs db
+
+# Teste conexão manual
+docker-compose exec db psql -U sum_user -d sum_db -c "SELECT 1;"
+```
+
+3. **Frontend não carrega:**
+```bash
+# Verifique logs do frontend
+docker-compose logs frontend
+
+# Reinstale dependências
+docker-compose exec frontend npm install
+```
+
+4. **Backend não responde:**
+```bash
+# Verifique logs do backend
+docker-compose logs backend
+
+# Execute migrações
+docker-compose exec backend python django-back-end/manage.py migrate
+```
+
+### Reset Completo
 
 ```bash
-# Ver logs em tempo real
-docker-compose logs -f
+# Pare todos os serviços
+docker-compose down
 
-# Logs específicos
-docker-compose logs backend
-docker-compose logs frontend
-docker-compose logs nginx
+# Remova volumes e imagens
+docker-compose down -v
+docker system prune -af
 
-# Status dos serviços
-docker-compose ps
+# Reconstrua tudo
+docker-compose build --no-cache
+docker-compose up -d
 ```
 
-## ✅ Correções Implementadas
+## 📚 Documentação da API
 
-### Backend (Django)
-- ✅ Corrigido campo `tipo` para `user_type` em todos os modelos
-- ✅ Configuração CORS atualizada para incluir portas 5173 e 8080
-- ✅ URLs duplicadas removidas e organizadas
-- ✅ Autenticação JWT configurada corretamente
-- ✅ Logout melhorado para funcionar sem token válido
-- ✅ Configuração de banco de dados otimizada
+### Endpoints Principais
 
-### Frontend (Vue.js)
-- ✅ Configuração de proxy atualizada para Docker
-- ✅ Dockerfile otimizado para desenvolvimento
-- ✅ Configuração Vite corrigida
+- **Autenticação:** `/api/auth/`
+- **Escola:** `/api/escola/`
+- **Estudantes:** `/api/estudantes/`
+- **Professores:** `/api/professores/`
+- **Atividades:** `/api/atividades/`
+- **Eventos:** `/api/eventos/`
+- **Mapeamento:** `/api/mapeamento/`
 
-### Docker & Integração
-- ✅ Docker Compose simplificado e funcional
-- ✅ Nginx configurado como proxy reverso
-- ✅ Scripts de teste automático criados
-- ✅ Variáveis de ambiente configuradas
-- [Admin Interface](http://localhost:8000/admin/)
+### Exemplo de Uso
+
+```javascript
+// Login
+const response = await fetch('/api/auth/login/', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    identifier: 'admin',
+    password: 'admin123'
+  })
+});
+
+const data = await response.json();
+// { access: 'token...', refresh: 'token...', user_type: 'admin', ... }
+```
 
 ## 🤝 Contribuição
 
@@ -291,11 +328,13 @@ docker-compose ps
 
 ## 📄 Licença
 
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
 
 ## 📞 Suporte
 
-Para suporte e dúvidas:
-- Abra uma issue no GitHub
-- Consulte a documentação da API
-- Verifique os logs para troubleshooting
+Para suporte, abra uma issue no GitHub ou entre em contato através do email: suporte@sum.local
+
+---
+
+**S.U.M - Sistema Único de Mapeamento**  
+*Transformando a educação através da tecnologia* 🚀

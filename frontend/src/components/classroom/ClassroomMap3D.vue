@@ -11,6 +11,25 @@
     <!-- 3D Canvas Container -->
     <div ref="canvasContainer" class="w-full h-full"></div>
 
+    <!-- Seat Grid Overlay (simulado para demonstração) -->
+    <div 
+      v-if="showSeatGrid"
+      class="absolute inset-0 z-10 pointer-events-none"
+    >
+      <div 
+        class="absolute inset-6 grid gap-2"
+        :style="seatGridStyle"
+      >
+        <div 
+          v-for="seat in seatCells" 
+          :key="seat.id"
+          class="rounded-md transition-all"
+          :class="seatCellClass(seat)"
+          :style="seatCellStyle(seat)"
+        ></div>
+      </div>
+    </div>
+
     <!-- Controls Overlay -->
     <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg z-10">
       <div class="space-y-2 text-sm">
@@ -44,6 +63,16 @@
         <svg class="w-5 h-5 text-[#2d531a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+      </button>
+      <button 
+        v-if="interactive"
+        @click="toggleSeatGrid"
+        class="p-2 rounded-lg bg-white/90 hover:bg-white shadow-lg transition-all"
+        title="Mostrar/ocultar mapa de assentos"
+      >
+        <svg class="w-5 h-5 text-[#2d531a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
     </div>
@@ -114,11 +143,17 @@ const props = withDefaults(defineProps<{
   simulationMode?: boolean;
   simulationOptions?: SimulationOptions;
   editMode?: boolean;
+  seats?: { rows: number; cols: number };
+  showLabels?: boolean;
+  showHeatmap?: boolean;
 }>(), {
   height: '70vh',
   interactive: false,
   simulationMode: false,
-  editMode: false
+  editMode: false,
+  seats: () => ({ rows: 4, cols: 6 }),
+  showLabels: true,
+  showHeatmap: true
 });
 
 const emit = defineEmits<{
@@ -129,6 +164,7 @@ const canvasContainer = ref<HTMLElement | null>(null);
 const isLoading = ref(true);
 const selectedStudent = ref<Student | null>(null);
 const currentView = ref<'top' | 'perspective'>('perspective');
+const showSeatGrid = ref(true);
 
 // Mock data
 const students = ref<Student[]>([
@@ -215,6 +251,10 @@ const toggleView = () => {
   console.log('View toggled to:', currentView.value);
 };
 
+const toggleSeatGrid = () => {
+  showSeatGrid.value = !showSeatGrid.value;
+};
+
 const selectStudentById = (id: string) => {
   selectedStudent.value = students.value.find(s => s.id === id) || null;
 };
@@ -226,6 +266,36 @@ watch(() => props.simulationOptions, (newOptions) => {
     // Apply visual effects based on simulation type
   }
 }, { deep: true });
+
+// Seat grid computed data (simulação)
+const seatCells = computed(() => {
+  const cells: Array<{ id: string; row: number; col: number; heat: number; occupied: boolean; visionZone?: boolean }> = [];
+  for (let r = 0; r < props.seats.rows; r++) {
+    for (let c = 0; c < props.seats.cols; c++) {
+      const id = `${r}-${c}`;
+      const heat = props.showHeatmap ? Math.max(0.2, (r + 1) / props.seats.rows) : 0;
+      const occupied = Math.random() > 0.2; // simulação
+      const visionZone = r <= 1; // primeiras fileiras
+      cells.push({ id, row: r, col: c, heat, occupied, visionZone });
+    }
+  }
+  return cells;
+});
+
+const seatGridStyle = computed(() => ({
+  gridTemplateColumns: `repeat(${props.seats.cols}, minmax(0, 1fr))`,
+  gridTemplateRows: `repeat(${props.seats.rows}, minmax(0, 1fr))`
+}));
+
+const seatCellClass = (seat: any) => [
+  'pointer-events-none',
+  seat.occupied ? 'bg-white/70 border border-[#e1d4c2]' : 'bg-white/30 border border-dashed border-[#e1d4c2]/80',
+  seat.visionZone ? 'ring-2 ring-[#2d531a]/30' : ''
+];
+
+const seatCellStyle = (seat: any) => ({
+  boxShadow: props.showHeatmap ? `inset 0 -8px 24px rgba(45,83,26, ${seat.heat})` : 'none'
+});
 
 onMounted(() => {
   if (canvasContainer.value) {

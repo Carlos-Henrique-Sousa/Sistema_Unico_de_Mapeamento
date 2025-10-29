@@ -1,11 +1,24 @@
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import TemplateView
-from .views import health_check, api_info
+from django.conf import settings
+from django.conf.urls.static import static
+from .views import (
+    health_check, api_info, custom_admin_view, api_documentation_view,
+    system_status_view, custom_404_view, custom_500_view, generic_error_view
+)
 
 urlpatterns = [
     # Admin Django
     path('admin/', admin.site.urls),
+    
+    # Páginas personalizadas
+    path('admin/custom/', custom_admin_view, name='custom_admin'),
+    path('api/docs/', api_documentation_view, name='api_docs'),
+    path('status/', system_status_view, name='system_status'),
+    
+    # Health check específico para admin
+    path('admin/health/', health_check, name='admin_health_check'),
 
     # Endpoints de API (agrupados sob /api/)
     path('api/health/', health_check, name='api_health_check'),
@@ -23,3 +36,11 @@ urlpatterns = [
     path('api/eventos/', include(('eventos.urls', 'eventos'), namespace='eventos')),
     path('api/mapeamento/', include(('placement.urls', 'placement'), namespace='placement')),
 ]
+
+# Configuração para servir arquivos estáticos em desenvolvimento
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+# Handlers de erro personalizados
+handler404 = custom_404_view
+handler500 = custom_500_view

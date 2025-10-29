@@ -68,58 +68,73 @@
   </div>
 </template>
 
-<script setup>
-import { ref, onMounted, watch, nextTick } from 'vue'
+<script setup lang="ts">
+import { ref, onMounted, watch, nextTick, computed, onUnmounted } from 'vue'
 
-const props = defineProps({
-  data: {
-    type: Object,
-    required: true
-  },
-  type: {
-    type: String,
-    default: 'line',
-    validator: (value) => ['line', 'bar', 'pie', 'doughnut', 'radar'].includes(value)
-  },
-  chartTypes: {
-    type: Array,
-    default: () => []
-  },
-  options: {
-    type: Object,
-    default: () => ({})
-  },
-  title: {
-    type: String,
-    default: ''
-  },
-  subtitle: {
-    type: String,
-    default: ''
-  },
-  showLegend: {
-    type: Boolean,
-    default: true
-  },
-  loading: {
-    type: Boolean,
-    default: false
-  },
-  responsive: {
-    type: Boolean,
-    default: true
-  },
-  animated: {
-    type: Boolean,
-    default: true
-  }
+interface ChartData {
+  labels: string[]
+  datasets: Array<{
+    label: string
+    data: number[]
+    backgroundColor?: string | string[]
+    borderColor?: string | string[]
+    borderWidth?: number
+    fill?: boolean
+    tension?: number
+  }>
+}
+
+interface ChartOptions {
+  responsive?: boolean
+  maintainAspectRatio?: boolean
+  aspectRatio?: number
+  plugins?: any
+  animation?: any
+  scales?: any
+}
+
+const props = withDefaults(defineProps<{
+  data: ChartData
+  type?: 'line' | 'bar' | 'pie' | 'doughnut' | 'radar' | 'area' | 'scatter'
+  chartTypes?: string[]
+  options?: ChartOptions
+  title?: string
+  subtitle?: string
+  showLegend?: boolean
+  loading?: boolean
+  responsive?: boolean
+  animated?: boolean
+  realTime?: boolean
+  updateInterval?: number
+  showTooltip?: boolean
+  showGrid?: boolean
+  gradientFill?: boolean
+}>(), {
+  type: 'line',
+  chartTypes: () => [],
+  options: () => ({}),
+  title: '',
+  subtitle: '',
+  showLegend: true,
+  loading: false,
+  responsive: true,
+  animated: true,
+  realTime: false,
+  updateInterval: 1000,
+  showTooltip: true,
+  showGrid: true,
+  gradientFill: false
 })
 
-const chartCanvas = ref(null)
-const chartContainer = ref(null)
+const chartCanvas = ref<HTMLCanvasElement | null>(null)
+const chartContainer = ref<HTMLElement | null>(null)
 const currentType = ref(props.type)
-const hiddenDatasets = ref([])
-const chart = ref(null)
+const hiddenDatasets = ref<number[]>([])
+const chart = ref<any>(null)
+const animationFrame = ref<number | null>(null)
+const realTimeInterval = ref<NodeJS.Timeout | null>(null)
+const hoveredPoint = ref<{ x: number; y: number; dataset: number; index: number } | null>(null)
+const isAnimating = ref(false)
 
 const defaultOptions = {
   responsive: true,
@@ -130,6 +145,7 @@ const defaultOptions = {
       display: false
     },
     tooltip: {
+      enabled: props.showTooltip,
       backgroundColor: 'rgba(0, 0, 0, 0.8)',
       padding: 12,
       borderRadius: 8,
@@ -143,17 +159,77 @@ const defaultOptions = {
     }
   },
   animation: {
-    duration: 750,
+    duration: props.animated ? 750 : 0,
     easing: 'easeInOutQuart'
+  },
+  scales: props.showGrid ? {
+    x: {
+      grid: {
+        display: true,
+        color: 'rgba(0, 0, 0, 0.1)'
+      }
+    },
+    y: {
+      grid: {
+        display: true,
+        color: 'rgba(0, 0, 0, 0.1)'
+      }
+    }
+  } : {
+    x: { grid: { display: false } },
+    y: { grid: { display: false } }
   }
 }
 
+// Computed properties
+const chartData = computed(() => {
+  if (!props.data?.datasets) return null
+  
+  return {
+    ...props.data,
+    datasets: props.data.datasets.map((dataset, index) => ({
+      ...dataset,
+      hidden: hiddenDatasets.value.includes(index),
+      backgroundColor: props.gradientFill ? createGradient(dataset.backgroundColor as string) : dataset.backgroundColor,
+      borderColor: dataset.borderColor || dataset.backgroundColor,
+      borderWidth: dataset.borderWidth || 2,
+      fill: currentType.value === 'area' || dataset.fill,
+      tension: dataset.tension || (currentType.value === 'line' ? 0.4 : 0)
+    }))
+  }
+})
+
+const chartOptions = computed(() => ({
+  ...defaultOptions,
+  ...props.options,
+  animation: {
+    ...defaultOptions.animation,
+    ...props.options.animation,
+    duration: props.animated ? (props.options.animation?.duration || 750) : 0
+  }
+}))
+
+// Lifecycle hooks
 onMounted(() => {
   if (props.data && !props.loading) {
     renderChart()
   }
+  
+  if (props.realTime) {
+    startRealTimeUpdates()
+  }
+  
+  setupCanvasEvents()
 })
 
+onUnmounted(() => {
+  stopRealTimeUpdates()
+  if (animationFrame.value) {
+    cancelAnimationFrame(animationFrame.value)
+  }
+})
+
+// Watchers
 watch(() => props.data, () => {
   if (!props.loading) {
     renderChart()
@@ -170,32 +246,208 @@ watch(currentType, () => {
   renderChart()
 })
 
-const renderChart = () => {
-  if (!chartCanvas.value || props.loading) return
+watch(() => props.realTime, (newVal) => {
+  if (newVal) {
+    startRealTimeUpdates()
+  } else {
+    stopRealTimeUpdates()
+  }
+})
+
+// Helper functions
+const createGradient = (color: string) => {
+  if (!chartCanvas.value) return color
   
-  // Simulação de renderização (substitua com Chart.js real)
   const ctx = chartCanvas.value.getContext('2d')
+  const gradient = ctx.createLinearGradient(0, 0, 0, chartCanvas.value.height)
+  gradient.addColorStop(0, color + '80')
+  gradient.addColorStop(1, color + '20')
+  return gradient
+}
+
+const setupCanvasEvents = () => {
+  if (!chartCanvas.value) return
   
-  // Limpar canvas
-  ctx.clearRect(0, 0, chartCanvas.value.width, chartCanvas.value.height)
+  chartCanvas.value.addEventListener('mousemove', handleMouseMove)
+  chartCanvas.value.addEventListener('mouseleave', handleMouseLeave)
+  chartCanvas.value.addEventListener('click', handleCanvasClick)
+}
+
+const handleMouseMove = (event: MouseEvent) => {
+  if (!chartCanvas.value || !props.showTooltip) return
   
-  // Desenhar gráfico simples de demonstração
-  const width = chartCanvas.value.width
-  const height = chartCanvas.value.height
+  const rect = chartCanvas.value.getBoundingClientRect()
+  const x = event.clientX - rect.left
+  const y = event.clientY - rect.top
   
-  if (currentType.value === 'line' || currentType.value === 'bar') {
-    drawLineOrBar(ctx, width, height)
-  } else if (currentType.value === 'pie' || currentType.value === 'doughnut') {
-    drawPie(ctx, width, height)
+  // Find closest data point
+  const point = findClosestPoint(x, y)
+  hoveredPoint.value = point
+}
+
+const handleMouseLeave = () => {
+  hoveredPoint.value = null
+}
+
+const handleCanvasClick = (event: MouseEvent) => {
+  if (!chartCanvas.value) return
+  
+  const rect = chartCanvas.value.getBoundingClientRect()
+  const x = event.clientX - rect.left
+  const y = event.clientY - rect.top
+  
+  const point = findClosestPoint(x, y)
+  if (point) {
+    // Emit click event with point data
+    emit('point-click', {
+      dataset: point.dataset,
+      index: point.index,
+      value: props.data.datasets[point.dataset].data[point.index],
+      label: props.data.labels[point.index]
+    })
   }
 }
 
-const drawLineOrBar = (ctx, width, height) => {
+const findClosestPoint = (x: number, y: number) => {
+  if (!chartCanvas.value || !props.data?.datasets) return null
+  
+  const width = chartCanvas.value.width
+  const height = chartCanvas.value.height
   const padding = 40
   const graphWidth = width - padding * 2
   const graphHeight = height - padding * 2
   
-  // Eixos
+  let closestPoint = null
+  let minDistance = Infinity
+  
+  props.data.datasets.forEach((dataset, datasetIndex) => {
+    if (hiddenDatasets.value.includes(datasetIndex)) return
+    
+    dataset.data.forEach((value, index) => {
+      const pointX = padding + (graphWidth / (dataset.data.length - 1)) * index
+      const pointY = height - padding - (value / 100) * graphHeight
+      
+      const distance = Math.sqrt(Math.pow(x - pointX, 2) + Math.pow(y - pointY, 2))
+      
+      if (distance < minDistance && distance < 20) {
+        minDistance = distance
+        closestPoint = { x: pointX, y: pointY, dataset: datasetIndex, index }
+      }
+    })
+  })
+  
+  return closestPoint
+}
+
+const startRealTimeUpdates = () => {
+  if (realTimeInterval.value) return
+  
+  realTimeInterval.value = setInterval(() => {
+    if (props.data?.datasets) {
+      // Simulate real-time data updates
+      props.data.datasets.forEach(dataset => {
+        dataset.data = dataset.data.map(value => {
+          const change = (Math.random() - 0.5) * 10
+          return Math.max(0, Math.min(100, value + change))
+        })
+      })
+      renderChart()
+    }
+  }, props.updateInterval)
+}
+
+const stopRealTimeUpdates = () => {
+  if (realTimeInterval.value) {
+    clearInterval(realTimeInterval.value)
+    realTimeInterval.value = null
+  }
+}
+
+const emit = defineEmits<{
+  'point-click': [data: { dataset: number; index: number; value: number; label: string }]
+  'chart-ready': []
+}>()
+
+const renderChart = () => {
+  if (!chartCanvas.value || props.loading) return
+  
+  if (isAnimating.value) {
+    if (animationFrame.value) {
+      cancelAnimationFrame(animationFrame.value)
+    }
+  }
+  
+  isAnimating.value = true
+  
+  const ctx = chartCanvas.value.getContext('2d')
+  if (!ctx) return
+  
+  // Set canvas size
+  const containerWidth = chartContainer.value?.clientWidth || 400
+  const containerHeight = chartContainer.value?.clientHeight || 300
+  
+  chartCanvas.value.width = containerWidth * window.devicePixelRatio
+  chartCanvas.value.height = containerHeight * window.devicePixelRatio
+  
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
+  chartCanvas.value.style.width = containerWidth + 'px'
+  chartCanvas.value.style.height = containerHeight + 'px'
+  
+  // Clear canvas
+  ctx.clearRect(0, 0, containerWidth, containerHeight)
+  
+  // Render based on chart type
+  if (currentType.value === 'line' || currentType.value === 'area') {
+    drawLineOrArea(ctx, containerWidth, containerHeight)
+  } else if (currentType.value === 'bar') {
+    drawBar(ctx, containerWidth, containerHeight)
+  } else if (currentType.value === 'pie' || currentType.value === 'doughnut') {
+    drawPie(ctx, containerWidth, containerHeight)
+  } else if (currentType.value === 'radar') {
+    drawRadar(ctx, containerWidth, containerHeight)
+  } else if (currentType.value === 'scatter') {
+    drawScatter(ctx, containerWidth, containerHeight)
+  }
+  
+  // Draw hovered point
+  if (hoveredPoint.value && props.showTooltip) {
+    drawHoveredPoint(ctx, hoveredPoint.value)
+  }
+  
+  isAnimating.value = false
+  emit('chart-ready')
+}
+
+const drawLineOrArea = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
+  const padding = 40
+  const graphWidth = width - padding * 2
+  const graphHeight = height - padding * 2
+  
+  // Draw grid
+  if (props.showGrid) {
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)'
+    ctx.lineWidth = 1
+    
+    // Vertical grid lines
+    for (let i = 0; i <= 5; i++) {
+      const x = padding + (graphWidth / 5) * i
+      ctx.beginPath()
+      ctx.moveTo(x, padding)
+      ctx.lineTo(x, height - padding)
+      ctx.stroke()
+    }
+    
+    // Horizontal grid lines
+    for (let i = 0; i <= 5; i++) {
+      const y = padding + (graphHeight / 5) * i
+      ctx.beginPath()
+      ctx.moveTo(padding, y)
+      ctx.lineTo(width - padding, y)
+      ctx.stroke()
+    }
+  }
+  
+  // Draw axes
   ctx.strokeStyle = '#e5e7eb'
   ctx.lineWidth = 2
   ctx.beginPath()
@@ -204,15 +456,32 @@ const drawLineOrBar = (ctx, width, height) => {
   ctx.lineTo(width - padding, height - padding)
   ctx.stroke()
   
-  // Dados de exemplo
-  if (props.data?.datasets && props.data.datasets.length > 0) {
-    props.data.datasets.forEach((dataset, datasetIndex) => {
+  if (chartData.value?.datasets) {
+    chartData.value.datasets.forEach((dataset, datasetIndex) => {
       if (hiddenDatasets.value.includes(datasetIndex)) return
       
       const data = dataset.data || []
-      const color = dataset.backgroundColor || dataset.borderColor || '#667eea'
+      const color = dataset.borderColor || dataset.backgroundColor || '#667eea'
       
-      if (currentType.value === 'line') {
+      if (currentType.value === 'line' || currentType.value === 'area') {
+        // Draw area fill for area charts
+        if (currentType.value === 'area') {
+          ctx.fillStyle = props.gradientFill ? createGradient(color) : color + '20'
+          ctx.beginPath()
+          ctx.moveTo(padding, height - padding)
+          
+          data.forEach((value, index) => {
+            const x = padding + (graphWidth / (data.length - 1)) * index
+            const y = height - padding - (value / 100) * graphHeight
+            ctx.lineTo(x, y)
+          })
+          
+          ctx.lineTo(width - padding, height - padding)
+          ctx.closePath()
+          ctx.fill()
+        }
+        
+        // Draw line
         ctx.strokeStyle = color
         ctx.lineWidth = 3
         ctx.beginPath()
@@ -230,7 +499,7 @@ const drawLineOrBar = (ctx, width, height) => {
         
         ctx.stroke()
         
-        // Pontos
+        // Draw points
         data.forEach((value, index) => {
           const x = padding + (graphWidth / (data.length - 1)) * index
           const y = height - padding - (value / 100) * graphHeight
@@ -239,32 +508,87 @@ const drawLineOrBar = (ctx, width, height) => {
           ctx.beginPath()
           ctx.arc(x, y, 5, 0, Math.PI * 2)
           ctx.fill()
-        })
-      } else if (currentType.value === 'bar') {
-        const barWidth = graphWidth / data.length * 0.6
-        
-        data.forEach((value, index) => {
-          const x = padding + (graphWidth / data.length) * index + (graphWidth / data.length - barWidth) / 2
-          const barHeight = (value / 100) * graphHeight
-          const y = height - padding - barHeight
           
-          ctx.fillStyle = color
-          ctx.fillRect(x, y, barWidth, barHeight)
+          // Draw point border
+          ctx.strokeStyle = '#ffffff'
+          ctx.lineWidth = 2
+          ctx.stroke()
         })
       }
     })
   }
 }
 
-const drawPie = (ctx, width, height) => {
+const drawBar = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
+  const padding = 40
+  const graphWidth = width - padding * 2
+  const graphHeight = height - padding * 2
+  
+  // Draw grid
+  if (props.showGrid) {
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)'
+    ctx.lineWidth = 1
+    
+    // Horizontal grid lines
+    for (let i = 0; i <= 5; i++) {
+      const y = padding + (graphHeight / 5) * i
+      ctx.beginPath()
+      ctx.moveTo(padding, y)
+      ctx.lineTo(width - padding, y)
+      ctx.stroke()
+    }
+  }
+  
+  // Draw axes
+  ctx.strokeStyle = '#e5e7eb'
+  ctx.lineWidth = 2
+  ctx.beginPath()
+  ctx.moveTo(padding, padding)
+  ctx.lineTo(padding, height - padding)
+  ctx.lineTo(width - padding, height - padding)
+  ctx.stroke()
+  
+  if (chartData.value?.datasets) {
+    const datasetCount = chartData.value.datasets.filter((_, i) => !hiddenDatasets.value.includes(i)).length
+    const barWidth = (graphWidth / (chartData.value.labels.length * datasetCount)) * 0.8
+    
+    chartData.value.datasets.forEach((dataset, datasetIndex) => {
+      if (hiddenDatasets.value.includes(datasetIndex)) return
+      
+      const data = dataset.data || []
+      const color = dataset.backgroundColor || dataset.borderColor || '#667eea'
+      
+      data.forEach((value, index) => {
+        const x = padding + (graphWidth / data.length) * index + (datasetIndex * barWidth)
+        const barHeight = (value / 100) * graphHeight
+        const y = height - padding - barHeight
+        
+        // Draw bar with gradient
+        const gradient = ctx.createLinearGradient(0, y, 0, height - padding)
+        gradient.addColorStop(0, color)
+        gradient.addColorStop(1, color + '80')
+        
+        ctx.fillStyle = gradient
+        ctx.fillRect(x, y, barWidth, barHeight)
+        
+        // Draw bar border
+        ctx.strokeStyle = color
+        ctx.lineWidth = 1
+        ctx.strokeRect(x, y, barWidth, barHeight)
+      })
+    })
+  }
+}
+
+const drawPie = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
   const centerX = width / 2
   const centerY = height / 2
   const radius = Math.min(width, height) / 2 - 40
   
-  if (props.data?.datasets && props.data.datasets[0]?.data) {
-    const data = props.data.datasets[0].data
+  if (chartData.value?.datasets && chartData.value.datasets[0]?.data) {
+    const data = chartData.value.datasets[0].data
     const total = data.reduce((sum, val) => sum + val, 0)
-    const colors = props.data.datasets[0].backgroundColor || [
+    const colors = chartData.value.datasets[0].backgroundColor || [
       '#667eea', '#764ba2', '#f093fb', '#4facfe', '#43e97b'
     ]
     
@@ -274,18 +598,25 @@ const drawPie = (ctx, width, height) => {
       if (hiddenDatasets.value.includes(index)) return
       
       const sliceAngle = (value / total) * Math.PI * 2
+      const color = Array.isArray(colors) ? colors[index] : colors
       
-      ctx.fillStyle = colors[index] || colors[0]
+      // Draw slice
+      ctx.fillStyle = color
       ctx.beginPath()
       ctx.moveTo(centerX, centerY)
       ctx.arc(centerX, centerY, radius, startAngle, startAngle + sliceAngle)
       ctx.closePath()
       ctx.fill()
       
+      // Draw slice border
+      ctx.strokeStyle = '#ffffff'
+      ctx.lineWidth = 2
+      ctx.stroke()
+      
       startAngle += sliceAngle
     })
     
-    // Buraco para doughnut
+    // Draw hole for doughnut
     if (currentType.value === 'doughnut') {
       ctx.fillStyle = '#ffffff'
       ctx.beginPath()
@@ -295,7 +626,172 @@ const drawPie = (ctx, width, height) => {
   }
 }
 
-const toggleDataset = (index) => {
+const drawRadar = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
+  const centerX = width / 2
+  const centerY = height / 2
+  const radius = Math.min(width, height) / 2 - 60
+  
+  if (chartData.value?.datasets && chartData.value.datasets[0]?.data) {
+    const data = chartData.value.datasets[0].data
+    const labels = chartData.value.labels
+    const color = chartData.value.datasets[0].borderColor || '#667eea'
+    
+    // Draw radar grid
+    for (let i = 1; i <= 5; i++) {
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)'
+      ctx.lineWidth = 1
+      ctx.beginPath()
+      ctx.arc(centerX, centerY, (radius / 5) * i, 0, Math.PI * 2)
+      ctx.stroke()
+    }
+    
+    // Draw axes
+    labels.forEach((_, index) => {
+      const angle = (2 * Math.PI / labels.length) * index - Math.PI / 2
+      const x = centerX + radius * Math.cos(angle)
+      const y = centerY + radius * Math.sin(angle)
+      
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)'
+      ctx.lineWidth = 1
+      ctx.beginPath()
+      ctx.moveTo(centerX, centerY)
+      ctx.lineTo(x, y)
+      ctx.stroke()
+    })
+    
+    // Draw data polygon
+    ctx.fillStyle = color + '20'
+    ctx.strokeStyle = color
+    ctx.lineWidth = 3
+    ctx.beginPath()
+    
+    data.forEach((value, index) => {
+      const angle = (2 * Math.PI / data.length) * index - Math.PI / 2
+      const x = centerX + (radius * (value / 100)) * Math.cos(angle)
+      const y = centerY + (radius * (value / 100)) * Math.sin(angle)
+      
+      if (index === 0) {
+        ctx.moveTo(x, y)
+      } else {
+        ctx.lineTo(x, y)
+      }
+    })
+    
+    ctx.closePath()
+    ctx.fill()
+    ctx.stroke()
+    
+    // Draw data points
+    data.forEach((value, index) => {
+      const angle = (2 * Math.PI / data.length) * index - Math.PI / 2
+      const x = centerX + (radius * (value / 100)) * Math.cos(angle)
+      const y = centerY + (radius * (value / 100)) * Math.sin(angle)
+      
+      ctx.fillStyle = color
+      ctx.beginPath()
+      ctx.arc(x, y, 6, 0, Math.PI * 2)
+      ctx.fill()
+      
+      ctx.strokeStyle = '#ffffff'
+      ctx.lineWidth = 2
+      ctx.stroke()
+    })
+  }
+}
+
+const drawScatter = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
+  const padding = 40
+  const graphWidth = width - padding * 2
+  const graphHeight = height - padding * 2
+  
+  // Draw grid
+  if (props.showGrid) {
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)'
+    ctx.lineWidth = 1
+    
+    for (let i = 0; i <= 5; i++) {
+      const x = padding + (graphWidth / 5) * i
+      const y = padding + (graphHeight / 5) * i
+      
+      ctx.beginPath()
+      ctx.moveTo(x, padding)
+      ctx.lineTo(x, height - padding)
+      ctx.stroke()
+      
+      ctx.beginPath()
+      ctx.moveTo(padding, y)
+      ctx.lineTo(width - padding, y)
+      ctx.stroke()
+    }
+  }
+  
+  // Draw axes
+  ctx.strokeStyle = '#e5e7eb'
+  ctx.lineWidth = 2
+  ctx.beginPath()
+  ctx.moveTo(padding, padding)
+  ctx.lineTo(padding, height - padding)
+  ctx.lineTo(width - padding, height - padding)
+  ctx.stroke()
+  
+  if (chartData.value?.datasets) {
+    chartData.value.datasets.forEach((dataset, datasetIndex) => {
+      if (hiddenDatasets.value.includes(datasetIndex)) return
+      
+      const data = dataset.data || []
+      const color = dataset.backgroundColor || dataset.borderColor || '#667eea'
+      
+      data.forEach((value, index) => {
+        const x = padding + (graphWidth / 100) * value
+        const y = height - padding - (graphHeight / 100) * value
+        
+        ctx.fillStyle = color
+        ctx.beginPath()
+        ctx.arc(x, y, 8, 0, Math.PI * 2)
+        ctx.fill()
+        
+        ctx.strokeStyle = '#ffffff'
+        ctx.lineWidth = 2
+        ctx.stroke()
+      })
+    })
+  }
+}
+
+const drawHoveredPoint = (ctx: CanvasRenderingContext2D, point: { x: number; y: number; dataset: number; index: number }) => {
+  if (!point) return
+  
+  // Draw highlight circle
+  ctx.strokeStyle = '#667eea'
+  ctx.lineWidth = 3
+  ctx.beginPath()
+  ctx.arc(point.x, point.y, 12, 0, Math.PI * 2)
+  ctx.stroke()
+  
+  // Draw tooltip
+  const dataset = props.data.datasets[point.dataset]
+  const value = dataset.data[point.index]
+  const label = props.data.labels[point.index]
+  
+  const tooltipText = `${dataset.label}: ${value}`
+  const tooltipWidth = tooltipText.length * 8 + 20
+  const tooltipHeight = 30
+  
+  const tooltipX = Math.min(point.x, ctx.canvas.width - tooltipWidth - 10)
+  const tooltipY = point.y - tooltipHeight - 20
+  
+  // Draw tooltip background
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.9)'
+  ctx.fillRect(tooltipX, tooltipY, tooltipWidth, tooltipHeight)
+  
+  // Draw tooltip text
+  ctx.fillStyle = '#ffffff'
+  ctx.font = '12px Arial'
+  ctx.textAlign = 'center'
+  ctx.fillText(tooltipText, tooltipX + tooltipWidth / 2, tooltipY + tooltipHeight / 2 + 4)
+}
+
+const toggleDataset = (index: number) => {
   const idx = hiddenDatasets.value.indexOf(index)
   if (idx > -1) {
     hiddenDatasets.value.splice(idx, 1)

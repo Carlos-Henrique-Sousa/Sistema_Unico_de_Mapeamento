@@ -64,23 +64,52 @@
           :style="{ filter: glow ? 'url(#glow)' : 'none' }"
         />
         
+        <!-- Comparison polygon (if enabled) -->
+        <polygon
+          v-if="showComparison && comparisonPolygonPoints"
+          :points="comparisonPolygonPoints"
+          fill="none"
+          stroke="#ef4444"
+          stroke-width="2"
+          stroke-dasharray="5,5"
+          stroke-linejoin="round"
+          class="radar-comparison"
+        />
+        
         <!-- Data points -->
         <g class="radar-points">
           <circle
-            v-for="(skill, index) in skills"
+            v-for="(skill, index) in animatedSkills"
             :key="`point-${index}`"
             :cx="getPointX(index, skill.value)"
             :cy="getPointY(index, skill.value)"
             r="6"
-            :fill="getPointColor(skill.value)"
+            :fill="getPointColor(skill.value, index)"
             stroke="white"
             stroke-width="2"
             class="radar-point"
-            @mouseenter="hoveredSkill = index"
+            :class="{ 'point-hovered': hoveredSkill === index }"
+            @mouseenter="handleSkillHover(index)"
             @mouseleave="hoveredSkill = null"
+            @click="handleSkillClick(index)"
           >
             <title>{{ skill.name }}: {{ skill.value }}%</title>
           </circle>
+        </g>
+        
+        <!-- Value labels -->
+        <g v-if="showValues" class="radar-values">
+          <text
+            v-for="(skill, index) in animatedSkills"
+            :key="`value-${index}`"
+            :x="getPointX(index, skill.value)"
+            :y="getPointY(index, skill.value) - 15"
+            text-anchor="middle"
+            class="radar-value"
+            :class="{ 'value-hovered': hoveredSkill === index }"
+          >
+            {{ Math.round(skill.value) }}%
+          </text>
         </g>
         
         <!-- Labels -->
@@ -136,82 +165,139 @@
   </div>
 </template>
 
-<script setup>
-import { ref, computed } from 'vue'
+<script setup lang="ts">
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
-const props = defineProps({
-  skills: {
-    type: Array,
-    required: true,
-    validator: (skills) => skills.every(s => s.name && typeof s.value === 'number')
-  },
-  size: {
-    type: Number,
-    default: 400
-  },
-  levels: {
-    type: Number,
-    default: 5
-  },
-  title: {
-    type: String,
-    default: ''
-  },
-  subtitle: {
-    type: String,
-    default: ''
-  },
-  showLegend: {
-    type: Boolean,
-    default: true
-  },
-  glow: {
-    type: Boolean,
-    default: true
-  },
-  animated: {
-    type: Boolean,
-    default: true
-  }
+interface Skill {
+  name: string
+  value: number
+  color?: string
+  description?: string
+}
+
+const props = withDefaults(defineProps<{
+  skills: Skill[]
+  size?: number
+  levels?: number
+  title?: string
+  subtitle?: string
+  showLegend?: boolean
+  glow?: boolean
+  animated?: boolean
+  interactive?: boolean
+  showValues?: boolean
+  showTooltips?: boolean
+  colorScheme?: 'default' | 'gradient' | 'custom'
+  customColors?: string[]
+  animationDuration?: number
+  showComparison?: boolean
+  comparisonData?: Skill[]
+}>(), {
+  size: 400,
+  levels: 5,
+  title: '',
+  subtitle: '',
+  showLegend: true,
+  glow: true,
+  animated: true,
+  interactive: true,
+  showValues: true,
+  showTooltips: true,
+  colorScheme: 'default',
+  customColors: () => [],
+  animationDuration: 1000,
+  showComparison: false,
+  comparisonData: () => []
 })
 
-const radarContainer = ref(null)
-const hoveredSkill = ref(null)
+const emit = defineEmits<{
+  'skill-hover': [skill: Skill, index: number]
+  'skill-click': [skill: Skill, index: number]
+  'radar-ready': []
+}>()
 
+const radarContainer = ref<HTMLElement | null>(null)
+const hoveredSkill = ref<number | null>(null)
+const animationProgress = ref(0)
+const animationFrame = ref<number | null>(null)
+
+// Computed properties
 const centerX = computed(() => props.size / 2)
 const centerY = computed(() => props.size / 2)
 const radius = computed(() => (props.size / 2) - 60)
 const angleStep = computed(() => (2 * Math.PI) / props.skills.length)
 
-const getPointX = (index, value) => {
+const colorPalette = computed(() => {
+  switch (props.colorScheme) {
+    case 'gradient':
+      return [
+        '#667eea', '#764ba2', '#f093fb', '#4facfe', '#43e97b',
+        '#f6d365', '#fda085', '#a8edea', '#fed6e3', '#d299c2'
+      ]
+    case 'custom':
+      return props.customColors.length > 0 ? props.customColors : [
+        '#667eea', '#764ba2', '#f093fb', '#4facfe', '#43e97b'
+      ]
+    default:
+      return [
+        '#667eea', '#764ba2', '#f093fb', '#4facfe', '#43e97b'
+      ]
+  }
+})
+
+const animatedSkills = computed(() => {
+  if (!props.animated) return props.skills
+  
+  return props.skills.map(skill => ({
+    ...skill,
+    value: skill.value * animationProgress.value
+  }))
+})
+
+const polygonPoints = computed(() => {
+  return animatedSkills.value
+    .map((skill, index) => `${getPointX(index, skill.value)},${getPointY(index, skill.value)}`)
+    .join(' ')
+})
+
+const comparisonPolygonPoints = computed(() => {
+  if (!props.showComparison || !props.comparisonData) return ''
+  
+  return props.comparisonData
+    .map((skill, index) => `${getPointX(index, skill.value)},${getPointY(index, skill.value)}`)
+    .join(' ')
+})
+
+// Helper functions
+const getPointX = (index: number, value: number) => {
   const angle = angleStep.value * index - Math.PI / 2
   return centerX.value + (radius.value * (value / 100)) * Math.cos(angle)
 }
 
-const getPointY = (index, value) => {
+const getPointY = (index: number, value: number) => {
   const angle = angleStep.value * index - Math.PI / 2
   return centerY.value + (radius.value * (value / 100)) * Math.sin(angle)
 }
 
-const getLabelX = (index) => {
+const getLabelX = (index: number) => {
   const angle = angleStep.value * index - Math.PI / 2
   const labelRadius = radius.value + 30
   return centerX.value + labelRadius * Math.cos(angle)
 }
 
-const getLabelY = (index) => {
+const getLabelY = (index: number) => {
   const angle = angleStep.value * index - Math.PI / 2
   const labelRadius = radius.value + 30
   return centerY.value + labelRadius * Math.sin(angle) + 5
 }
 
-const polygonPoints = computed(() => {
-  return props.skills
-    .map((skill, index) => `${getPointX(index, skill.value)},${getPointY(index, skill.value)}`)
-    .join(' ')
-})
-
-const getPointColor = (value) => {
+const getPointColor = (value: number, index: number) => {
+  if (props.skills[index]?.color) return props.skills[index].color
+  
+  if (props.colorScheme === 'gradient') {
+    return colorPalette.value[index % colorPalette.value.length]
+  }
+  
   if (value >= 80) return '#10b981'
   if (value >= 60) return '#3b82f6'
   if (value >= 40) return '#f59e0b'
@@ -228,6 +314,57 @@ const tooltipStyle = computed(() => {
   return {
     left: `${x}px`,
     top: `${y - 40}px`
+  }
+})
+
+// Event handlers
+const handleSkillHover = (index: number) => {
+  if (!props.interactive) return
+  
+  hoveredSkill.value = index
+  emit('skill-hover', props.skills[index], index)
+}
+
+const handleSkillClick = (index: number) => {
+  if (!props.interactive) return
+  
+  emit('skill-click', props.skills[index], index)
+}
+
+// Animation
+const startAnimation = () => {
+  if (!props.animated) {
+    animationProgress.value = 1
+    return
+  }
+  
+  const startTime = performance.now()
+  
+  const animate = (currentTime: number) => {
+    const elapsed = currentTime - startTime
+    const progress = Math.min(elapsed / props.animationDuration, 1)
+    
+    // Easing function (ease-out)
+    animationProgress.value = 1 - Math.pow(1 - progress, 3)
+    
+    if (progress < 1) {
+      animationFrame.value = requestAnimationFrame(animate)
+    } else {
+      emit('radar-ready')
+    }
+  }
+  
+  animationFrame.value = requestAnimationFrame(animate)
+}
+
+// Lifecycle
+onMounted(() => {
+  startAnimation()
+})
+
+onUnmounted(() => {
+  if (animationFrame.value) {
+    cancelAnimationFrame(animationFrame.value)
   }
 })
 </script>

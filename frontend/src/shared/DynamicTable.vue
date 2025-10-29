@@ -103,50 +103,95 @@
   </div>
 </template>
 
-<script setup>
-import { ref, computed } from 'vue'
+<script setup lang="ts">
+import { ref, computed, watch, onMounted } from 'vue'
 
-const props = defineProps({
-  columns: {
-    type: Array,
-    required: true
-  },
-  data: {
-    type: Array,
-    required: true
-  },
-  searchable: {
-    type: Boolean,
-    default: false
-  },
-  paginated: {
-    type: Boolean,
-    default: false
-  },
-  perPage: {
-    type: Number,
-    default: 10
-  },
-  actions: {
-    type: Boolean,
-    default: false
-  },
-  title: {
-    type: String,
-    default: ''
-  }
+interface Column {
+  key: string
+  label: string
+  sortable?: boolean
+  format?: (value: any) => string
+  width?: string
+  align?: 'left' | 'center' | 'right'
+  type?: 'text' | 'number' | 'date' | 'boolean' | 'custom'
+}
+
+interface TableRow {
+  [key: string]: any
+}
+
+const props = withDefaults(defineProps<{
+  columns: Column[]
+  data: TableRow[]
+  searchable?: boolean
+  paginated?: boolean
+  perPage?: number
+  actions?: boolean
+  title?: string
+  loading?: boolean
+  selectable?: boolean
+  multiSelect?: boolean
+  sortable?: boolean
+  filterable?: boolean
+  exportable?: boolean
+  refreshable?: boolean
+  striped?: boolean
+  hoverable?: boolean
+  compact?: boolean
+  bordered?: boolean
+  showSummary?: boolean
+  summaryColumns?: string[]
+  customFilters?: Array<{
+    key: string
+    label: string
+    type: 'select' | 'input' | 'date' | 'number'
+    options?: Array<{ value: any; label: string }>
+  }>
+}>(), {
+  searchable: false,
+  paginated: false,
+  perPage: 10,
+  actions: false,
+  title: '',
+  loading: false,
+  selectable: false,
+  multiSelect: false,
+  sortable: true,
+  filterable: false,
+  exportable: false,
+  refreshable: false,
+  striped: true,
+  hoverable: true,
+  compact: false,
+  bordered: false,
+  showSummary: false,
+  summaryColumns: () => [],
+  customFilters: () => []
 })
 
-const emit = defineEmits(['row-click'])
+const emit = defineEmits<{
+  'row-click': [row: TableRow, index: number]
+  'row-select': [row: TableRow, selected: boolean]
+  'selection-change': [selectedRows: TableRow[]]
+  'sort-change': [column: string, direction: 'asc' | 'desc']
+  'filter-change': [filters: Record<string, any>]
+  'export': [format: 'csv' | 'excel' | 'pdf']
+  'refresh': []
+}>()
 
 const searchQuery = ref('')
 const sortKey = ref('')
-const sortOrder = ref('asc')
+const sortOrder = ref<'asc' | 'desc'>('asc')
 const currentPage = ref(1)
+const selectedRows = ref<Set<number>>(new Set())
+const customFilters = ref<Record<string, any>>({})
+const isLoading = ref(props.loading)
 
+// Computed properties
 const filteredData = computed(() => {
   let result = [...props.data]
   
+  // Apply search
   if (searchQuery.value) {
     result = result.filter(row => {
       return props.columns.some(col => {
@@ -156,7 +201,21 @@ const filteredData = computed(() => {
     })
   }
   
-  if (sortKey.value) {
+  // Apply custom filters
+  Object.entries(customFilters.value).forEach(([key, value]) => {
+    if (value !== null && value !== undefined && value !== '') {
+      result = result.filter(row => {
+        const rowValue = row[key]
+        if (typeof value === 'string') {
+          return String(rowValue).toLowerCase().includes(value.toLowerCase())
+        }
+        return rowValue === value
+      })
+    }
+  })
+  
+  // Apply sorting
+  if (sortKey.value && props.sortable) {
     result.sort((a, b) => {
       const aVal = a[sortKey.value]
       const bVal = b[sortKey.value]
@@ -183,21 +242,130 @@ const paginatedData = computed(() => {
   return filteredData.value.slice(start, end)
 })
 
-const sortBy = (key) => {
+const summaryData = computed(() => {
+  if (!props.showSummary || props.summaryColumns.length === 0) return {}
+  
+  const summary: Record<string, any> = {}
+  
+  props.summaryColumns.forEach(columnKey => {
+    const column = props.columns.find(col => col.key === columnKey)
+    if (!column) return
+    
+    const values = filteredData.value.map(row => row[columnKey])
+    
+    if (column.type === 'number') {
+      summary[columnKey] = {
+        sum: values.reduce((sum, val) => sum + (Number(val) || 0), 0),
+        avg: values.reduce((sum, val) => sum + (Number(val) || 0), 0) / values.length,
+        min: Math.min(...values.map(val => Number(val) || 0)),
+        max: Math.max(...values.map(val => Number(val) || 0))
+      }
+    } else {
+      summary[columnKey] = {
+        count: values.length,
+        unique: new Set(values).size
+      }
+    }
+  })
+  
+  return summary
+})
+
+// Methods
+const sortBy = (key: string) => {
+  if (!props.sortable) return
+  
   if (sortKey.value === key) {
     sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
   } else {
     sortKey.value = key
     sortOrder.value = 'asc'
   }
+  
+  emit('sort-change', key, sortOrder.value)
 }
 
-const formatCell = (value, column) => {
+const formatCell = (value: any, column: Column) => {
   if (column.format && typeof column.format === 'function') {
     return column.format(value)
   }
+  
+  if (column.type === 'date' && value) {
+    return new Date(value).toLocaleDateString()
+  }
+  
+  if (column.type === 'boolean') {
+    return value ? 'Sim' : 'Não'
+  }
+  
   return value
 }
+
+const handleRowClick = (row: TableRow, index: number) => {
+  emit('row-click', row, index)
+}
+
+const handleRowSelect = (row: TableRow, index: number, selected: boolean) => {
+  if (selected) {
+    selectedRows.value.add(index)
+  } else {
+    selectedRows.value.delete(index)
+  }
+  
+  emit('row-select', row, selected)
+  emit('selection-change', Array.from(selectedRows.value).map(i => props.data[i]))
+}
+
+const handleSelectAll = (selected: boolean) => {
+  if (selected) {
+    paginatedData.value.forEach((_, index) => {
+      selectedRows.value.add(index)
+    })
+  } else {
+    paginatedData.value.forEach((_, index) => {
+      selectedRows.value.delete(index)
+    })
+  }
+  
+  emit('selection-change', Array.from(selectedRows.value).map(i => props.data[i]))
+}
+
+const handleFilterChange = (key: string, value: any) => {
+  customFilters.value[key] = value
+  emit('filter-change', customFilters.value)
+}
+
+const exportData = (format: 'csv' | 'excel' | 'pdf') => {
+  emit('export', format)
+}
+
+const refresh = () => {
+  emit('refresh')
+}
+
+const clearFilters = () => {
+  customFilters.value = {}
+  searchQuery.value = ''
+  emit('filter-change', {})
+}
+
+// Watchers
+watch(() => props.loading, (newVal) => {
+  isLoading.value = newVal
+})
+
+watch(() => props.data, () => {
+  selectedRows.value.clear()
+}, { deep: true })
+
+// Lifecycle
+onMounted(() => {
+  if (props.customFilters.length > 0) {
+    props.customFilters.forEach(filter => {
+      customFilters.value[filter.key] = null
+    })
+  }
+})
 </script>
 
 <style scoped>

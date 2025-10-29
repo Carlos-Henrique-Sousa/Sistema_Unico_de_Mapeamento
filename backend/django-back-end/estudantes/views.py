@@ -17,7 +17,7 @@ class EstudanteViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsAluno | IsProfessor | IsEscola | IsPDT]
 
     def get_queryset(self):
-        if self.request.user.tipo == 'aluno':
+        if self.request.user.user_type == 'aluno':
             return Estudante.objects.filter(usuario=self.request.user)
         return super().get_queryset()
 
@@ -30,7 +30,7 @@ class NotaViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsAluno | IsProfessor | IsEscola | IsPDT]
 
     def get_queryset(self):
-        if self.request.user.type == 'aluno':
+        if self.request.user.user_type == 'aluno':
             estudante = Estudante.objects.get(usuario=self.request.user)
             return Nota.objects.filter(estudante=estudante)
         return super().get_queryset()
@@ -41,7 +41,7 @@ class FaltaViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsAluno | IsProfessor | IsEscola | IsPDT]
 
     def get_queryset(self):
-        if self.request.user_type == 'aluno':
+        if self.request.user.user_type == 'aluno':
             estudante = Estudante.objects.get(usuario=self.request.user)
             return Falta.objects.filter(estudante=estudante)
         return super().get_queryset()

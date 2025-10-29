@@ -3,7 +3,7 @@ from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from core.permissions import IsProfessor, IsPDT, IsEscola, IsEscola
+from core.permissions import IsProfessor, IsPDT, IsEscola
 from .models import Professor, PDT
 from .serializers import ProfessorSerializer, PDTSerializer
 from placement.models import MapeamentoSala
@@ -35,12 +35,23 @@ class DashboardProfessorAPIView(APIView):
     permission_classes = [IsAuthenticated, IsProfessor | IsPDT]
 
     def get(self, request):
-        if request.user.tipo == 'professor':
-            professor = Professor.objects.get(usuario=request.user)
-            turmas = professor.turmas.all()
+        if request.user.user_type == 'professor':
+            try:
+                professor = Professor.objects.get(usuario=request.user)
+                turmas = professor.turmas.all()
+            except Professor.DoesNotExist:
+                # Tenta como PDT
+                pdt = PDT.objects.get(usuario=request.user)
+                turmas = [pdt.turma]
         else:
-            pdt = PDT.objects.get(usuario=request.user)
-            turmas = [pdt.turma]
+            # Assumindo que é PDT ou outro tipo de professor
+            try:
+                pdt = PDT.objects.get(usuario=request.user)
+                turmas = [pdt.turma]
+            except PDT.DoesNotExist:
+                # Tenta como Professor normal
+                professor = Professor.objects.get(usuario=request.user)
+                turmas = professor.turmas.all()
         data = {
             'turmas': [turma.nome for turma in turmas],
         }

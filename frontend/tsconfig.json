@@ -37,6 +37,9 @@
     /* Vue Specific */
     "types": ["vite/client", "node"]
   },
+  "vueCompilerOptions": {
+    "target": 3
+  },
   "include": [
     "src/**/*.ts",
     "src/**/*.d.ts",

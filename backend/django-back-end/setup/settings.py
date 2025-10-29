@@ -82,7 +82,7 @@ ROOT_URLCONF = 'setup.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],  # Adicione se tiver templates custom
+        'DIRS': [BASE_DIR / 'templates'],  # Templates personalizados
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -122,8 +122,16 @@ elif DATABASE_URL.startswith('postgresql'):
     # PostgreSQL para produção
     import dj_database_url
     DATABASES = {
-        'default': dj_database_url.parse(DATABASE_URL)
+        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
     }
+    # Configurações otimizadas para PostgreSQL
+    DATABASES['default'].update({
+        'CONN_MAX_AGE': 600,
+        'OPTIONS': {
+            'connect_timeout': 10,
+            'options': '-c timezone=America/Sao_Paulo',
+        },
+    })
 else:
     # Fallback para SQLite
     DATABASES = {
@@ -168,8 +176,18 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'  # Para collectstatic em produção
+
+# Configurações adicionais para arquivos estáticos
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
+
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -178,6 +196,18 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Custom User Model
 AUTH_USER_MODEL = 'core.User'
+
+# Configuração de cache (usando memória local para desenvolvimento)
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+        'TIMEOUT': 300,
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,
+        }
+    }
+}
 
 # REST Framework Settings
 REST_FRAMEWORK = {
@@ -216,6 +246,28 @@ CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:5173,
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = DEBUG  # Permite todas as origens em desenvolvimento
 
+# Configurações adicionais do CORS
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
 # Integração IA (ex.: OpenAI)
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')  # Adicione no .env
 
@@ -235,6 +287,12 @@ if 'test' in sys.argv:
 
 # Logging (melhorado para desenvolvimento e produção)
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
+
+# Criar diretório de logs se não existir
+import os
+logs_dir = BASE_DIR / 'logs'
+logs_dir.mkdir(exist_ok=True)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -255,7 +313,7 @@ LOGGING = {
         },
         'file': {
             'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'logs' / 'django.log',
+            'filename': logs_dir / 'django.log',
             'formatter': 'verbose',
         },
     },

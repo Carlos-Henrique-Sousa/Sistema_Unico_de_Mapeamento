@@ -1,72 +1,86 @@
 <template>
   <div class="showcase-view">
+    <!-- Subtle Background -->
+    <div class="subtle-bg">
+      <div class="grid-overlay"></div>
+    </div>
+
     <!-- Header -->
     <header :class="['header', { 'header-scrolled': scrolled }]">
       <nav class="nav-container">
         <div class="logo-section">
           <div class="logo-icon">
-            <span>S</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#17181e" />
+              <path d="M2 17L12 22L22 17" stroke="#17181e" stroke-width="2" />
+            </svg>
           </div>
           <span class="logo-text">S.U.M</span>
         </div>
         
         <button @click="menuOpen = !menuOpen" class="menu-toggle">
-          <svg v-if="!menuOpen" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="3" y1="12" x2="21" y2="12"></line>
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <line x1="3" y1="18" x2="21" y2="18"></line>
-          </svg>
-          <svg v-else width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
+          <span class="menu-line" :class="{ 'open': menuOpen }"></span>
+          <span class="menu-line" :class="{ 'open': menuOpen }"></span>
+          <span class="menu-line" :class="{ 'open': menuOpen }"></span>
         </button>
         
         <div class="nav-links">
-          <a href="#features">Recursos</a>
-          <a href="#profiles">Perfis</a>
-          <a href="#about">Sobre</a>
-          <button class="btn-primary">Começar Agora</button>
+          <a href="#features" class="nav-link">Funcionalidades</a>
+          <a href="#profiles" class="nav-link">Dashboards</a>
+          <a href="#about" class="nav-link">Sistema</a>
+          <button class="btn-primary" @click="goToEntrar">
+            <span>Acessar Sistema</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14m-7-7l7 7-7 7"/>
+            </svg>
+          </button>
         </div>
       </nav>
     </header>
 
     <!-- Hero Section -->
     <section class="hero-section">
-      <div class="hero-bg-gradient"></div>
-      <div class="hero-blur hero-blur-1"></div>
-      <div class="hero-blur hero-blur-2"></div>
-      
       <div class="hero-content">
         <div class="hero-badge">
-          <span class="pulse-dot"></span>
-          <span>Plataforma educacional inteligente</span>
+          <span class="status-dot"></span>
+          <span>Sistema de Gestão Escolar Completo</span>
         </div>
         
         <h1 class="hero-title">
-          Sistema Único de
-          <span class="gradient-text">Mapeamento</span>
+          Transforme sua
+          <span class="highlight-text">Escola</span>
         </h1>
         
         <p class="hero-description">
-          Revolucione a gestão educacional com análises em tempo real, inteligência artificial e dashboards personalizados para cada perfil
+          Gerencie alunos, professores e recursos com dashboards inteligentes, 
+          mapeamento de salas e análises de produtividade em tempo real
         </p>
         
         <div class="hero-buttons">
-          <button class="btn-primary btn-large">
-            Explorar Plataforma
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="9 18 15 12 9 6"></polyline>
+          <button class="btn-primary btn-large" @click="goToEntrar">
+            <span>Acessar Dashboard</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14m-7-7l7 7-7 7"/>
             </svg>
           </button>
-          <button class="btn-secondary btn-large">Ver Demonstração</button>
+          <button class="btn-secondary btn-large">
+            <span>Ver Mapeamento 3D</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+          </button>
         </div>
 
         <!-- Stats -->
         <div class="stats-grid">
           <div v-for="stat in stats" :key="stat.label" class="stat-card">
-            <div class="stat-value">{{ stat.value }}</div>
-            <div class="stat-label">{{ stat.label }}</div>
+            <div class="stat-icon">
+              <component :is="stat.icon" />
+            </div>
+            <div class="stat-content">
+              <div class="stat-value">{{ stat.value }}</div>
+              <div class="stat-label">{{ stat.label }}</div>
+            </div>
           </div>
         </div>
       </div>
@@ -76,21 +90,150 @@
     <section id="features" class="features-section">
       <div class="section-container">
         <div class="section-header">
-          <h2 class="section-title">
-            Recursos <span class="text-emerald">Poderosos</span>
-          </h2>
+          <div class="section-badge">Funcionalidades</div>
+          <h2 class="section-title">Gestão Escolar Completa</h2>
           <p class="section-description">
-            Ferramentas completas para transformar a experiência educacional
+            Dashboards inteligentes e mapeamento 3D para máxima produtividade
           </p>
         </div>
 
         <div class="features-grid">
-          <div v-for="feature in features" :key="feature.title" class="feature-card">
+          <div v-for="(feature, index) in features" :key="feature.title" class="feature-card">
+            <div class="feature-number">{{ String(index + 1).padStart(2, '0') }}</div>
             <div class="feature-icon">
               <component :is="feature.icon" />
             </div>
             <h3 class="feature-title">{{ feature.title }}</h3>
             <p class="feature-description">{{ feature.description }}</p>
+            <button class="feature-link">
+              <span>Explorar</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12h14m-7-7l7 7-7 7"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Demo Section: Demos interativas do sistema -->
+    <section id="demos" class="features-section">
+      <div class="section-container">
+        <div class="section-header">
+          <div class="section-badge">Demonstrações</div>
+          <h2 class="section-title">Mapeamento 3D e Dashboards</h2>
+          <p class="section-description">
+            Visualize o mapeamento 3D das salas, indicadores de produtividade e dados acadêmicos
+          </p>
+        </div>
+
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="14" rx="2"/>
+                <path d="M7 21h10"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Mapeamento 3D da Sala</h3>
+            <p class="feature-description">Simulação interativa com visão superior e perspectiva</p>
+            <div class="demo-controls" style="display:flex; gap:0.75rem; align-items:center; flex-wrap: wrap; margin-bottom: 0.75rem;">
+              <label style="font-size:0.85rem; color:#6b6b6b;">Simulação: </label>
+              <select v-model="simType" style="padding:0.4rem 0.6rem; border:1px solid #e5e7eb; border-radius:8px;">
+                <option value="myopia">Miopia</option>
+                <option value="glaucoma">Glaucoma</option>
+                <option value="colorBlindness">Daltonismo</option>
+              </select>
+              <label style="font-size:0.85rem; color:#6b6b6b;">Intensidade: {{ simIntensity }}%</label>
+              <input type="range" min="0" max="100" v-model="simIntensity"/>
+            </div>
+            <ClassroomMap3D 
+              classroom-id="demo-room" 
+              height="360px" 
+              :interactive="true"
+              :seats="{ rows: 5, cols: 8 }"
+              :simulationMode="true"
+              :simulationOptions="{ studentId: '2', type: simType, intensity: Number(simIntensity), showLabels: true }"
+              :showHeatmap="true"
+            />
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 3v18h18"/>
+                <path d="M7 15l4-4 4 4 5-5"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Produtividade</h3>
+            <p class="feature-description">Evolução de produtividade por período</p>
+            <InteractiveChart
+              :title="'Produtividade'"
+              :subtitle="'Visão geral semanal'"
+              type="line"
+              :chartTypes="['line','bar','area']"
+              :data="productivityChart"
+              :options="{}"
+              :showLegend="false"
+              :realTime="true"
+              :updateInterval="2000"
+              :gradientFill="true"
+              :showGrid="true"
+              :animated="true"
+              @point-click="handleChartClick"
+            />
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Competências</h3>
+            <p class="feature-description">Radar de competências acadêmicas</p>
+            <SkillRadar
+              :title="'Desempenho por Competência'"
+              :skills="radarSkills"
+              :size="340"
+              :levels="5"
+              :showLegend="false"
+              :animated="true"
+              :interactive="true"
+              :showValues="true"
+              :colorScheme="'gradient'"
+              :glow="true"
+              @skill-click="handleSkillClick"
+            />
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18M3 12h18M3 18h18"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Turmas e Salas</h3>
+            <p class="feature-description">Tabela dinâmica de turmas e professores</p>
+            <DynamicTable
+              :title="'Turmas'"
+              :columns="tableColumns"
+              :data="tableData"
+              :searchable="true"
+              :paginated="true"
+              :perPage="5"
+              :selectable="true"
+              :multiSelect="true"
+              :exportable="true"
+              :refreshable="true"
+              :striped="true"
+              :hoverable="true"
+              :showSummary="true"
+              :summaryColumns="['students']"
+              @row-click="handleTableRowClick"
+              @selection-change="handleTableSelection"
+              @export="handleTableExport"
+            />
           </div>
         </div>
       </div>
@@ -100,11 +243,10 @@
     <section id="profiles" class="profiles-section">
       <div class="section-container">
         <div class="section-header">
-          <h2 class="section-title">
-            Escolha seu <span class="text-cyan">Perfil</span>
-          </h2>
+          <div class="section-badge">Perfis</div>
+          <h2 class="section-title">Dashboards Personalizados</h2>
           <p class="section-description">
-            Experiência personalizada para cada tipo de usuário
+            Cada perfil tem acesso a funcionalidades específicas de gestão
           </p>
         </div>
 
@@ -117,10 +259,12 @@
             @mouseenter="activeProfile = profile.id"
             @mouseleave="activeProfile = null"
           >
-            <div :class="['profile-gradient', profile.gradientClass]"></div>
             <div class="profile-content">
-              <div :class="['profile-icon', profile.gradientClass]">
-                <component :is="profile.icon" />
+              <div class="profile-header">
+                <div class="profile-icon">
+                  <component :is="profile.icon" />
+                </div>
+                <div class="profile-badge">{{ profile.badge }}</div>
               </div>
               
               <h3 class="profile-name">{{ profile.name }}</h3>
@@ -128,18 +272,20 @@
               
               <div class="profile-stats">
                 <div v-for="stat in profile.stats" :key="stat.label" class="profile-stat">
-                  <div class="profile-stat-label">
+                  <div class="stat-icon-small">
                     <component :is="stat.icon" />
-                    <span>{{ stat.label }}</span>
                   </div>
-                  <span class="profile-stat-value">{{ stat.value }}</span>
+                  <div class="stat-info">
+                    <span class="stat-label-small">{{ stat.label }}</span>
+                    <span class="stat-value-small">{{ stat.value }}</span>
+                  </div>
                 </div>
               </div>
               
               <button class="profile-button">
-                Acessar Dashboard
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="9 18 15 12 9 6"></polyline>
+                <span>Ver Dashboard</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M5 12h14m-7-7l7 7-7 7"/>
                 </svg>
               </button>
             </div>
@@ -150,37 +296,119 @@
 
     <!-- CTA Section -->
     <section class="cta-section">
-      <div class="cta-blur cta-blur-1"></div>
-      <div class="cta-blur cta-blur-2"></div>
-      
       <div class="cta-content">
+        <div class="cta-badge">
+          <span class="status-dot"></span>
+          <span>Comece Hoje</span>
+        </div>
+        
         <h2 class="cta-title">
-          Pronto para transformar sua
-          <span class="cta-gradient-text">experiência educacional?</span>
+          Pronto para revolucionar a gestão da sua escola?
         </h2>
+        
         <p class="cta-description">
-          Junte-se a milhares de educadores e estudantes que já utilizam o S.U.M
+          Aumente a produtividade e eficiência com dashboards inteligentes e mapeamento 3D
         </p>
-        <button class="btn-cta">Começar Gratuitamente</button>
+        
+        <div class="cta-buttons">
+          <button class="btn-cta">
+            <span>Testar Sistema</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14m-7-7l7 7-7 7"/>
+            </svg>
+          </button>
+          <button class="btn-cta-secondary">
+            <span>Ver Mapeamento 3D</span>
+          </button>
+        </div>
+
+        <div class="cta-features">
+          <div class="cta-feature">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <span>Gestão completa</span>
+          </div>
+          <div class="cta-feature">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <span>Mapeamento 3D</span>
+          </div>
+          <div class="cta-feature">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <span>Dashboards inteligentes</span>
+          </div>
+        </div>
       </div>
     </section>
 
     <!-- Footer -->
     <footer class="footer">
       <div class="footer-content">
-        <div class="footer-logo">
-          <div class="logo-icon">
-            <span>S</span>
+        <div class="footer-top">
+          <div class="footer-brand">
+            <div class="logo-section">
+              <div class="logo-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#17181e" />
+                  <path d="M2 17L12 22L22 17" stroke="#17181e" stroke-width="2" />
+                </svg>
+              </div>
+              <span class="logo-text">S.U.M</span>
+            </div>
+            <p class="footer-description">
+              Sistema de Gestão Escolar<br/>
+              Dashboards e mapeamento 3D
+            </p>
           </div>
-          <span class="logo-text">S.U.M</span>
+
+          <div class="footer-links-group">
+            <div class="footer-column">
+              <h4>Sistema</h4>
+              <a href="#">Dashboards</a>
+              <a href="#">Mapeamento 3D</a>
+              <a href="#">Gestão</a>
+              <a href="#">Relatórios</a>
+            </div>
+            <div class="footer-column">
+              <h4>Escola</h4>
+              <a href="#">Professores</a>
+              <a href="#">Alunos</a>
+              <a href="#">Turmas</a>
+              <a href="#">Calendário</a>
+            </div>
+            <div class="footer-column">
+              <h4>Suporte</h4>
+              <a href="#">Documentação</a>
+              <a href="#">Tutorial</a>
+              <a href="#">Contato</a>
+              <a href="#">FAQ</a>
+            </div>
+          </div>
         </div>
-        <p class="footer-description">
-          Sistema Único de Mapeamento - Plataforma educacional inteligente
-        </p>
-        <div class="footer-links">
-          <a href="#">Termos de Uso</a>
-          <a href="#">Privacidade</a>
-          <a href="#">Contato</a>
+
+        <div class="footer-bottom">
+          <p>&copy; 2025 S.U.M. Todos os direitos reservados.</p>
+          <div class="social-links">
+            <a href="#" class="social-link">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+              </svg>
+            </a>
+            <a href="#" class="social-link">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+              </svg>
+            </a>
+            <a href="#" class="social-link">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+              </svg>
+            </a>
+          </div>
         </div>
       </div>
     </footer>
@@ -189,10 +417,15 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, defineComponent, h } from 'vue'
+import { useRouter } from 'vue-router'
+import ClassroomMap3D from '@/components/classroom/ClassroomMap3D.vue'
+import InteractiveChart from '@/shared/InteractiveChart.vue'
+import SkillRadar from '@/shared/SkillRadar.vue'
+import DynamicTable from '@/shared/DynamicTable.vue'
 
-// Icons as Vue components
+// Icons - Minimalistas
 const BarChartIcon = defineComponent({
-  render: () => h('svg', { width: 24, height: 24, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
+  render: () => h('svg', { width: 22, height: 22, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
     h('line', { x1: 12, y1: 20, x2: 12, y2: 10 }),
     h('line', { x1: 18, y1: 20, x2: 18, y2: 4 }),
     h('line', { x1: 6, y1: 20, x2: 6, y2: 16 })
@@ -200,126 +433,204 @@ const BarChartIcon = defineComponent({
 })
 
 const FileTextIcon = defineComponent({
-  render: () => h('svg', { width: 24, height: 24, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
+  render: () => h('svg', { width: 22, height: 22, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
     h('path', { d: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z' }),
-    h('polyline', { points: '14 2 14 8 20 8' }),
-    h('line', { x1: 16, y1: 13, x2: 8, y2: 13 }),
-    h('line', { x1: 16, y1: 17, x2: 8, y2: 17 }),
-    h('polyline', { points: '10 9 9 9 8 9' })
+    h('polyline', { points: '14 2 14 8 20 8' })
   ])
 })
 
 const TrendingUpIcon = defineComponent({
-  render: () => h('svg', { width: 24, height: 24, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
+  render: () => h('svg', { width: 22, height: 22, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
     h('polyline', { points: '23 6 13.5 15.5 8.5 10.5 1 18' }),
     h('polyline', { points: '17 6 23 6 23 12' })
   ])
 })
 
 const CalendarIcon = defineComponent({
-  render: () => h('svg', { width: 24, height: 24, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
+  render: () => h('svg', { width: 22, height: 22, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
     h('rect', { x: 3, y: 4, width: 18, height: 18, rx: 2, ry: 2 }),
     h('line', { x1: 16, y1: 2, x2: 16, y2: 6 }),
-    h('line', { x1: 8, y1: 2, x2: 8, y2: 6 }),
-    h('line', { x1: 3, y1: 10, x2: 21, y2: 10 })
+    h('line', { x1: 8, y1: 2, x2: 8, y2: 6 })
   ])
 })
 
 const BookOpenIcon = defineComponent({
-  render: () => h('svg', { width: 32, height: 32, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
+  render: () => h('svg', { width: 26, height: 26, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
     h('path', { d: 'M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z' }),
     h('path', { d: 'M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z' })
   ])
 })
 
 const UsersIcon = defineComponent({
-  render: () => h('svg', { width: 32, height: 32, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
+  render: () => h('svg', { width: 26, height: 26, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
     h('path', { d: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2' }),
-    h('circle', { cx: 9, cy: 7, r: 4 }),
-    h('path', { d: 'M23 21v-2a4 4 0 0 0-3-3.87' }),
-    h('path', { d: 'M16 3.13a4 4 0 0 1 0 7.75' })
+    h('circle', { cx: 9, cy: 7, r: 4 })
   ])
 })
 
 const SchoolIcon = defineComponent({
-  render: () => h('svg', { width: 32, height: 32, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
+  render: () => h('svg', { width: 26, height: 26, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
     h('path', { d: 'M22 10v6M2 10l10-5 10 5-10 5z' }),
     h('path', { d: 'M6 12v5c3 3 9 3 12 0v-5' })
   ])
 })
 
 const SettingsIcon = defineComponent({
-  render: () => h('svg', { width: 32, height: 32, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
+  render: () => h('svg', { width: 26, height: 26, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
     h('circle', { cx: 12, cy: 12, r: 3 }),
-    h('path', { d: 'M12 1v6m0 6v6m9.22-9.22l-4.24 4.24m-5.96 0L6.78 9.78m12.44 8.44l-4.24-4.24m-5.96 0l-4.24 4.24' })
+    h('path', { d: 'M12 1v6m0 6v6' })
   ])
 })
 
 const SmallFileIcon = defineComponent({
-  render: () => h('svg', { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
-    h('path', { d: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z' }),
-    h('polyline', { points: '14 2 14 8 20 8' })
+  render: () => h('svg', { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
+    h('path', { d: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z' })
   ])
 })
 
 const SmallTrendIcon = defineComponent({
-  render: () => h('svg', { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
-    h('polyline', { points: '23 6 13.5 15.5 8.5 10.5 1 18' }),
-    h('polyline', { points: '17 6 23 6 23 12' })
+  render: () => h('svg', { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
+    h('polyline', { points: '23 6 13.5 15.5 8.5 10.5 1 18' })
   ])
 })
 
 const SmallUsersIcon = defineComponent({
-  render: () => h('svg', { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
-    h('path', { d: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2' }),
+  render: () => h('svg', { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
     h('circle', { cx: 9, cy: 7, r: 4 })
   ])
 })
 
-const SmallBookIcon = defineComponent({
-  render: () => h('svg', { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
-    h('path', { d: 'M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z' }),
-    h('path', { d: 'M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z' })
+// removed UsersGroupIcon (unused)
+
+const CheckIcon = defineComponent({
+  render: () => h('svg', { width: 18, height: 18, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
+    h('polyline', { points: '20 6 9 17 4 12' })
   ])
 })
 
-const SmallSchoolIcon = defineComponent({
-  render: () => h('svg', { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
-    h('path', { d: 'M22 10v6M2 10l10-5 10 5-10 5z' }),
-    h('path', { d: 'M6 12v5c3 3 9 3 12 0v-5' })
+const ClockIcon = defineComponent({
+  render: () => h('svg', { width: 18, height: 18, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
+    h('circle', { cx: 12, cy: 12, r: 10 }),
+    h('polyline', { points: '12 6 12 12 16 14' })
   ])
 })
 
 const scrolled = ref(false)
 const menuOpen = ref(false)
 const activeProfile = ref<string | null>(null)
+const router = useRouter()
+const goToEntrar = () => router.push('/entrar')
+
+// Demo data for InteractiveChart
+const productivityChart = {
+  labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex'],
+  datasets: [
+    { 
+      label: 'Produtividade', 
+      data: [62, 68, 75, 80, 88], 
+      borderColor: '#2d531a', 
+      backgroundColor: '#2d531a',
+      fill: true,
+      tension: 0.4
+    },
+    { 
+      label: 'Meta', 
+      data: [70, 70, 70, 70, 70], 
+      borderColor: '#e1d4c2', 
+      backgroundColor: '#e1d4c2',
+      borderDash: [5, 5],
+      fill: false
+    }
+  ]
+}
+
+// Demo data for SkillRadar
+const radarSkills = [
+  { name: 'Frequência', value: 85, color: '#2d531a' },
+  { name: 'Entrega', value: 78, color: '#0f1e3f' },
+  { name: 'Participação', value: 72, color: '#e1d4c2' },
+  { name: 'Notas', value: 80, color: '#2d531a' },
+  { name: 'Evolução', value: 90, color: '#0f1e3f' },
+  { name: 'Colaboração', value: 75, color: '#e1d4c2' }
+]
+
+// Controls for 3D simulation
+const simType = ref<'myopia'|'glaucoma'|'colorBlindness'>('myopia')
+const simIntensity = ref(45)
+
+// Demo data for DynamicTable
+const tableColumns = [
+  { key: 'turma', label: 'Turma', sortable: true, type: 'text' },
+  { key: 'professor', label: 'Professor', sortable: true, type: 'text' },
+  { key: 'sala', label: 'Sala', sortable: true, type: 'text' },
+  { key: 'horario', label: 'Horário', sortable: true, type: 'text' },
+  { key: 'students', label: 'Alunos', sortable: true, type: 'number' },
+  { key: 'status', label: 'Status', sortable: true, type: 'text' }
+]
+
+const tableData = [
+  { turma: '9º A', professor: 'Prof. Silva', sala: 'Sala 12', horario: '08:00', students: 30, status: 'Ativa' },
+  { turma: '8º B', professor: 'Prof. Costa', sala: 'Sala 08', horario: '09:00', students: 28, status: 'Ativa' },
+  { turma: '7º C', professor: 'Prof. Santos', sala: 'Sala 05', horario: '10:00', students: 32, status: 'Inativa' },
+  { turma: '6º A', professor: 'Profª. Lima', sala: 'Sala 02', horario: '11:00', students: 25, status: 'Ativa' },
+  { turma: '5º B', professor: 'Prof. Rocha', sala: 'Sala 01', horario: '13:00', students: 27, status: 'Ativa' },
+  { turma: '4º A', professor: 'Profª. Oliveira', sala: 'Sala 03', horario: '14:00', students: 24, status: 'Ativa' },
+  { turma: '3º B', professor: 'Prof. Ferreira', sala: 'Sala 06', horario: '15:00', students: 26, status: 'Ativa' },
+  { turma: '2º A', professor: 'Profª. Almeida', sala: 'Sala 04', horario: '16:00', students: 23, status: 'Ativa' }
+]
+
+// Event handlers
+const handleChartClick = (data: any) => {
+  console.log('Chart point clicked:', data)
+  // Add any chart interaction logic here
+}
+
+const handleSkillClick = (skill: any, index: number) => {
+  console.log('Skill clicked:', skill, index)
+  // Add any skill interaction logic here
+}
+
+const handleTableRowClick = (row: any, index: number) => {
+  console.log('Table row clicked:', row, index)
+  // Add any table row interaction logic here
+}
+
+const handleTableSelection = (selectedRows: any[]) => {
+  console.log('Table selection changed:', selectedRows)
+  // Add any selection logic here
+}
+
+const handleTableExport = (format: string) => {
+  console.log('Table export requested:', format)
+  // Add export logic here
+}
 
 const stats = [
-  { value: '3.5k+', label: 'Usuários Ativos' },
-  { value: '98%', label: 'Satisfação' },
-  { value: '24/7', label: 'Suporte' },
-  { value: '12+', label: 'Instituições' }
+  { value: '+40%', label: 'Produtividade', icon: TrendingUpIcon },
+  { value: '95%', label: 'Gestão Eficiente', icon: CheckIcon },
+  { value: '100%', label: 'Controle Total', icon: ClockIcon },
+  { value: '24h', label: 'Monitoramento', icon: SchoolIcon }
 ]
 
 const features = [
   {
-    title: 'Dashboard Inteligente',
-    description: 'Visualize dados em tempo real com gráficos e métricas personalizadas',
+    title: 'Dashboard de Gestão',
+    description: 'Controle total da escola com métricas de produtividade, frequência e desempenho em tempo real',
     icon: BarChartIcon
   },
   {
-    title: 'Gestão de Atividades',
-    description: 'Crie, distribua e avalie atividades de forma automatizada',
+    title: 'Mapeamento 3D de Salas',
+    description: 'Visualize e gerencie o layout das salas de aula com tecnologia 3D interativa',
     icon: FileTextIcon
   },
   {
-    title: 'Análise de Desempenho',
-    description: 'Acompanhe o progresso individual e coletivo com relatórios detalhados',
+    title: 'Gestão de Professores',
+    description: 'Monitore carga horária, planejamentos e produtividade dos educadores',
     icon: TrendingUpIcon
   },
   {
-    title: 'Calendário Acadêmico',
-    description: 'Organize eventos, prazos e compromissos em um só lugar',
+    title: 'Controle de Alunos',
+    description: 'Acompanhe frequência, notas e desenvolvimento acadêmico de cada estudante',
     icon: CalendarIcon
   }
 ]
@@ -329,48 +640,44 @@ const profiles = [
     id: 'aluno',
     name: 'Aluno',
     icon: BookOpenIcon,
-    description: 'Acompanhe seu desempenho acadêmico em tempo real',
-    color: '#10b981',
-    gradientClass: 'gradient-emerald',
+    description: 'Acompanhe suas notas, frequência e atividades em tempo real',
+    badge: 'Estudante',
     stats: [
-      { label: 'Atividades', value: '24', icon: SmallFileIcon },
-      { label: 'Progresso', value: '87%', icon: SmallTrendIcon }
+      { label: 'Notas', value: 'A+', icon: SmallFileIcon },
+      { label: 'Frequência', value: '95%', icon: SmallTrendIcon }
     ]
   },
   {
     id: 'professor',
     name: 'Professor',
     icon: UsersIcon,
-    description: 'Gerencie turmas e atividades com inteligência artificial',
-    color: '#3b82f6',
-    gradientClass: 'gradient-blue',
+    description: 'Gerencie suas turmas, planejamentos e produtividade',
+    badge: 'Educador',
     stats: [
-      { label: 'Turmas', value: '5', icon: SmallUsersIcon },
-      { label: 'Alunos', value: '142', icon: SmallBookIcon }
+      { label: 'Turmas', value: '4', icon: SmallUsersIcon },
+      { label: 'Alunos', value: '120', icon: SmallFileIcon }
     ]
   },
   {
-    id: 'escola',
-    name: 'Escola',
+    id: 'coordenador',
+    name: 'Coordenador',
     icon: SchoolIcon,
-    description: 'Administre recursos e acompanhe métricas institucionais',
-    color: '#8b5cf6',
-    gradientClass: 'gradient-violet',
+    description: 'Monitore professores e alunos com dashboards de gestão',
+    badge: 'Gestão',
     stats: [
-      { label: 'Professores', value: '48', icon: SmallUsersIcon },
-      { label: 'Estudantes', value: '1.2k', icon: SmallBookIcon }
+      { label: 'Professores', value: '25', icon: SmallUsersIcon },
+      { label: 'Turmas', value: '15', icon: SmallTrendIcon }
     ]
   },
   {
-    id: 'admin',
-    name: 'Admin',
+    id: 'diretor',
+    name: 'Diretor',
     icon: SettingsIcon,
-    description: 'Configurações avançadas e gestão do sistema',
-    color: '#06b6d4',
-    gradientClass: 'gradient-cyan',
+    description: 'Controle total da escola com métricas de produtividade',
+    badge: 'Administração',
     stats: [
-      { label: 'Escolas', value: '12', icon: SmallSchoolIcon },
-      { label: 'Usuários', value: '3.5k', icon: SmallUsersIcon }
+      { label: 'Escola', value: '1', icon: SmallUsersIcon },
+      { label: 'Alunos', value: '500+', icon: SmallTrendIcon }
     ]
   }
 ]
@@ -399,6 +706,25 @@ onUnmounted(() => {
   min-height: 100vh;
   background: #fcfcfc;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Subtle Background */
+.subtle-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: #fcfcfc;
+}
+
+.grid-overlay {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(23, 24, 30, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(23, 24, 30, 0.02) 1px, transparent 1px);
+  background-size: 60px 60px;
 }
 
 /* Header */
@@ -407,20 +733,21 @@ onUnmounted(() => {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 50;
+  z-index: 100;
+  background: rgba(252, 252, 252, 0.8);
+  backdrop-filter: blur(20px);
   transition: all 0.3s ease;
 }
 
 .header-scrolled {
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(20px);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid rgba(23, 24, 30, 0.08);
+  box-shadow: 0 1px 3px rgba(23, 24, 30, 0.04);
 }
 
 .nav-container {
-  max-width: 1280px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 1rem 1.5rem;
+  padding: 1rem 2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -430,135 +757,152 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.logo-section:hover {
+  opacity: 0.7;
 }
 
 .logo-icon {
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, #10b981, #06b6d4);
-  border-radius: 12px;
+  width: 38px;
+  height: 38px;
+  background: #fcfcfc;
+  border: 1.5px solid rgba(23, 24, 30, 0.12);
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.2s;
 }
 
-.logo-icon span {
-  color: white;
-  font-weight: bold;
-  font-size: 1.25rem;
+.logo-section:hover .logo-icon {
+  border-color: rgba(23, 24, 30, 0.2);
 }
 
 .logo-text {
-  font-size: 1.25rem;
-  font-weight: bold;
-  color: #17181D;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #17181e;
+  letter-spacing: -0.01em;
 }
 
 .menu-toggle {
   display: none;
+  flex-direction: column;
+  gap: 5px;
   background: none;
   border: none;
   cursor: pointer;
   padding: 0.5rem;
-  color: #17181D;
+}
+
+.menu-line {
+  width: 24px;
+  height: 2px;
+  background: #17181e;
+  transition: all 0.3s;
+  border-radius: 2px;
 }
 
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: 2.5rem;
 }
 
-.nav-links a {
-  color: #6b7280;
+.nav-link {
+  color: #6b6b6b;
   text-decoration: none;
-  transition: color 0.3s;
+  font-weight: 500;
+  font-size: 0.9rem;
+  position: relative;
+  transition: color 0.2s;
 }
 
-.nav-links a:hover {
-  color: #17181D;
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 1.5px;
+  background: #17181e;
+  transition: width 0.3s;
+}
+
+.nav-link:hover {
+  color: #17181e;
+}
+
+.nav-link:hover::after {
+  width: 100%;
 }
 
 .btn-primary {
-  padding: 0.625rem 1.5rem;
-  background: linear-gradient(135deg, #10b981, #06b6d4);
-  color: white;
+  padding: 0.7rem 1.5rem;
+  background: #17181e;
+  color: #fcfcfc;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   font-weight: 600;
+  font-size: 0.9rem;
   cursor: pointer;
-  transition: all 0.3s;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  transition: all 0.2s;
 }
 
 .btn-primary:hover {
-  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
-  transform: scale(1.05);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(23, 24, 30, 0.15);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
 }
 
 .btn-secondary {
-  padding: 0.625rem 1.5rem;
-  background: white;
-  color: #17181D;
-  border: 2px solid #e5e7eb;
-  border-radius: 12px;
+  padding: 0.7rem 1.5rem;
+  background: #fcfcfc;
+  color: #17181e;
+  border: 1.5px solid rgba(23, 24, 30, 0.12);
+  border-radius: 10px;
   font-weight: 600;
+  font-size: 0.9rem;
   cursor: pointer;
-  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
 }
 
 .btn-secondary:hover {
-  border-color: #10b981;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: rgba(23, 24, 30, 0.25);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(23, 24, 30, 0.08);
 }
 
 .btn-large {
   padding: 1rem 2rem;
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 
 /* Hero Section */
 .hero-section {
-  padding: 8rem 1.5rem 5rem;
+  min-height: 100vh;
+  padding: 10rem 2rem 6rem;
   position: relative;
-  overflow: hidden;
-}
-
-.hero-bg-gradient {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, #f0fdf4, #ecfeff, #eff6ff);
-  opacity: 0.5;
-}
-
-.hero-blur {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.2;
-}
-
-.hero-blur-1 {
-  top: 5rem;
-  left: 2.5rem;
-  width: 18rem;
-  height: 18rem;
-  background: #10b981;
-}
-
-.hero-blur-2 {
-  bottom: 2.5rem;
-  right: 2.5rem;
-  width: 24rem;
-  height: 24rem;
-  background: #06b6d4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .hero-content {
-  max-width: 1280px;
-  margin: 0 auto;
+  max-width: 1200px;
+  width: 100%;
   position: relative;
   z-index: 10;
   text-align: center;
@@ -567,53 +911,60 @@ onUnmounted(() => {
 .hero-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  padding: 0.5rem 1rem;
-  border-radius: 9999px;
-  border: 1px solid #e5e7eb;
-  margin-bottom: 2rem;
-  font-size: 0.875rem;
-  color: #6b7280;
+  gap: 0.6rem;
+  background: #fcfcfc;
+  padding: 0.6rem 1.2rem;
+  border-radius: 100px;
+  border: 1.5px solid rgba(23, 24, 30, 0.08);
+  margin-bottom: 2.5rem;
+  font-size: 0.85rem;
+  color: #6b6b6b;
+  transition: all 0.2s;
 }
 
-.pulse-dot {
-  width: 8px;
-  height: 8px;
+.hero-badge:hover {
+  border-color: rgba(23, 24, 30, 0.15);
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
   background: #10b981;
   border-radius: 50%;
-  animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
 }
 
 .hero-title {
-  font-size: 4rem;
-  font-weight: 900;
-  color: #17181D;
-  margin-bottom: 1.5rem;
+  font-size: 4.5rem;
+  font-weight: 800;
+  color: #17181e;
+  margin-bottom: 2rem;
   line-height: 1.1;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
 }
 
-.gradient-text {
+.highlight-text {
   display: block;
-  background: linear-gradient(135deg, #10b981, #06b6d4, #3b82f6);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #17181e;
+  position: relative;
+}
+
+.highlight-text::after {
+  content: '';
+  position: absolute;
+  bottom: 8px;
+  left: 0;
+  right: 0;
+  height: 12px;
+  background: rgba(59, 130, 246, 0.12);
+  z-index: -1;
 }
 
 .hero-description {
-  font-size: 1.25rem;
-  color: #6b7280;
-  max-width: 48rem;
+  font-size: 1.2rem;
+  color: #6b6b6b;
+  max-width: 700px;
   margin: 0 auto 3rem;
-  line-height: 1.6;
+  line-height: 1.7;
 }
 
 .hero-buttons {
@@ -624,49 +975,78 @@ onUnmounted(() => {
   margin-bottom: 5rem;
 }
 
+/* Stats Grid */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1.5rem;
-  max-width: 1000px;
+  max-width: 1100px;
   margin: 0 auto;
 }
 
 .stat-card {
-  background: white;
-  border-radius: 1rem;
-  padding: 1.5rem;
-  border: 1px solid #f3f4f6;
+  background: #fcfcfc;
+  border: 1.5px solid rgba(23, 24, 30, 0.08);
+  border-radius: 16px;
+  padding: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
   transition: all 0.3s;
 }
 
 .stat-card:hover {
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
+  border-color: rgba(23, 24, 30, 0.15);
+  box-shadow: 0 8px 24px rgba(23, 24, 30, 0.08);
+}
+
+.stat-icon {
+  width: 50px;
+  height: 50px;
+  background: #17181e;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fcfcfc;
+  flex-shrink: 0;
+  transition: transform 0.3s;
+}
+
+.stat-card:hover .stat-icon {
+  transform: scale(1.05);
+}
+
+.stat-content {
+  flex: 1;
+  text-align: left;
 }
 
 .stat-value {
-  font-size: 2rem;
-  font-weight: bold;
-  background: linear-gradient(135deg, #10b981, #06b6d4);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: 0.5rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #17181e;
+  margin-bottom: 0.25rem;
+  line-height: 1;
 }
 
 .stat-label {
-  font-size: 0.875rem;
-  color: #6b7280;
+  font-size: 0.85rem;
+  color: #6b6b6b;
+  font-weight: 500;
 }
 
 /* Features Section */
 .features-section {
-  padding: 5rem 1.5rem;
-  background: white;
+  padding: 6rem 2rem;
+  background: #fcfcfc;
+  position: relative;
+  z-index: 10;
 }
 
 .section-container {
-  max-width: 1280px;
+  max-width: 1400px;
   margin: 0 auto;
 }
 
@@ -675,365 +1055,482 @@ onUnmounted(() => {
   margin-bottom: 4rem;
 }
 
+.section-badge {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: #fcfcfc;
+  border: 1.5px solid rgba(23, 24, 30, 0.08);
+  border-radius: 100px;
+  color: #17181e;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 1.5rem;
+}
+
 .section-title {
   font-size: 3rem;
-  font-weight: bold;
-  color: #17181D;
+  font-weight: 800;
+  color: #17181e;
   margin-bottom: 1rem;
-}
-
-.text-emerald {
-  color: #10b981;
-}
-
-.text-cyan {
-  color: #06b6d4;
+  letter-spacing: -0.02em;
 }
 
 .section-description {
-  font-size: 1.125rem;
-  color: #6b7280;
-  max-width: 48rem;
+  font-size: 1.1rem;
+  color: #6b6b6b;
+  max-width: 650px;
   margin: 0 auto;
+  line-height: 1.7;
 }
 
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
 }
 
 .feature-card {
-  background: linear-gradient(135deg, #f9fafb, white);
-  padding: 2rem;
-  border-radius: 1rem;
-  border: 1px solid #f3f4f6;
+  background: #fcfcfc;
+  padding: 2.5rem;
+  border-radius: 20px;
+  border: 1.5px solid rgba(23, 24, 30, 0.08);
+  position: relative;
+  overflow: hidden;
   transition: all 0.3s;
 }
 
 .feature-card:hover {
-  border-color: #10b981;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  transform: translateY(-6px);
+  border-color: rgba(23, 24, 30, 0.15);
+  box-shadow: 0 12px 32px rgba(23, 24, 30, 0.1);
+}
+
+.feature-number {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: rgba(23, 24, 30, 0.04);
+  line-height: 1;
 }
 
 .feature-icon {
-  width: 56px;
-  height: 56px;
-  background: linear-gradient(135deg, #10b981, #06b6d4);
-  border-radius: 12px;
+  width: 60px;
+  height: 60px;
+  background: #17181e;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  margin-bottom: 1.5rem;
+  color: #fcfcfc;
+  margin-bottom: 2rem;
   transition: transform 0.3s;
 }
 
 .feature-card:hover .feature-icon {
-  transform: scale(1.1);
+  transform: scale(1.05);
 }
 
 .feature-title {
-  font-size: 1.25rem;
-  font-weight: bold;
-  color: #17181D;
-  margin-bottom: 0.75rem;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #17181e;
+  margin-bottom: 1rem;
+  line-height: 1.3;
 }
 
 .feature-description {
-  color: #6b7280;
-  line-height: 1.6;
+  color: #6b6b6b;
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+}
+
+.feature-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0;
+  background: none;
+  border: none;
+  color: #17181e;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.feature-link:hover {
+  gap: 0.75rem;
 }
 
 /* Profiles Section */
 .profiles-section {
-  padding: 5rem 1.5rem;
-  background: linear-gradient(135deg, #f9fafb, white);
+  padding: 6rem 2rem;
+  background: #f8f8f8;
+  position: relative;
+  z-index: 10;
 }
 
 .profiles-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
+  gap: 2rem;
 }
 
 .profile-card {
+  background: #fcfcfc;
+  border-radius: 20px;
+  border: 1.5px solid rgba(23, 24, 30, 0.08);
   position: relative;
-  background: white;
-  border-radius: 1.5rem;
   overflow: hidden;
-  border: 2px solid #f3f4f6;
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
+  transition: all 0.3s;
 }
 
-.profile-card:hover {
-  border-color: transparent;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-}
-
-.profile-gradient {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transition: opacity 0.5s;
-}
-
-.profile-card:hover .profile-gradient {
-  opacity: 1;
-}
-
-.gradient-emerald {
-  background: linear-gradient(135deg, #10b981, #14b8a6);
-}
-
-.gradient-blue {
-  background: linear-gradient(135deg, #3b82f6, #06b6d4);
-}
-
-.gradient-violet {
-  background: linear-gradient(135deg, #8b5cf6, #a855f7);
-}
-
-.gradient-cyan {
-  background: linear-gradient(135deg, #06b6d4, #3b82f6);
+.profile-card:hover,
+.profile-card.active {
+  transform: translateY(-6px);
+  border-color: rgba(23, 24, 30, 0.15);
+  box-shadow: 0 12px 32px rgba(23, 24, 30, 0.1);
 }
 
 .profile-content {
+  padding: 2.5rem;
   position: relative;
-  padding: 2rem;
-  background: white;
-  border-radius: 1.4rem;
-  margin: 2px;
+  z-index: 2;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
 }
 
 .profile-icon {
   width: 64px;
   height: 64px;
-  border-radius: 1rem;
+  background: #17181e;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  margin-bottom: 1.5rem;
-  transition: all 0.3s;
+  color: #fcfcfc;
+  transition: transform 0.3s;
 }
 
-.profile-card:hover .profile-icon {
-  transform: scale(1.1) rotate(5deg);
+.profile-card:hover .profile-icon,
+.profile-card.active .profile-icon {
+  transform: scale(1.05);
+}
+
+.profile-badge {
+  padding: 0.35rem 0.8rem;
+  background: rgba(23, 24, 30, 0.06);
+  border-radius: 100px;
+  color: #17181e;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .profile-name {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #17181D;
-  margin-bottom: 0.75rem;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #17181e;
+  margin-bottom: 1rem;
+  letter-spacing: -0.01em;
 }
 
 .profile-description {
-  color: #6b7280;
-  margin-bottom: 1.5rem;
-  line-height: 1.6;
+  color: #6b6b6b;
+  margin-bottom: 2rem;
+  line-height: 1.7;
+  font-size: 0.9rem;
 }
 
 .profile-stats {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: rgba(23, 24, 30, 0.02);
+  border-radius: 12px;
 }
 
 .profile-stat {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  background: #f9fafb;
-  border-radius: 12px;
-  padding: 0.75rem;
+  gap: 1rem;
 }
 
-.profile-stat-label {
+.stat-icon-small {
+  width: 36px;
+  height: 36px;
+  background: #fcfcfc;
+  border: 1.5px solid rgba(23, 24, 30, 0.08);
+  border-radius: 8px;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  color: #6b7280;
-  font-size: 0.875rem;
+  justify-content: center;
+  color: #17181e;
+  flex-shrink: 0;
 }
 
-.profile-stat-value {
-  font-weight: bold;
-  color: #17181D;
+.stat-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.stat-label-small {
+  font-size: 0.75rem;
+  color: #6b6b6b;
+  font-weight: 500;
+}
+
+.stat-value-small {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #17181e;
 }
 
 .profile-button {
   width: 100%;
-  padding: 0.75rem;
-  background: #f9fafb;
-  color: #17181D;
+  padding: 1rem;
+  background: #17181e;
+  color: #fcfcfc;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   font-weight: 600;
+  font-size: 0.9rem;
   cursor: pointer;
-  transition: all 0.3s;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  transition: all 0.2s;
 }
 
-.profile-card:hover .profile-button {
-  background: linear-gradient(135deg, #10b981, #06b6d4);
-  color: white;
-}
-
-.profile-button svg {
-  transition: transform 0.3s;
-}
-
-.profile-card:hover .profile-button svg {
-  transform: translateX(4px);
+.profile-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(23, 24, 30, 0.2);
 }
 
 /* CTA Section */
 .cta-section {
-  padding: 5rem 1.5rem;
-  background: linear-gradient(135deg, #17181D, #1f2937);
-  color: white;
-  position: relative;
-  overflow: hidden;
-}
-
-.cta-blur {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(100px);
-  opacity: 0.1;
-}
-
-.cta-blur-1 {
-  top: 0;
-  left: 25%;
-  width: 24rem;
-  height: 24rem;
-  background: #10b981;
-}
-
-.cta-blur-2 {
-  bottom: 0;
-  right: 25%;
-  width: 24rem;
-  height: 24rem;
-  background: #06b6d4;
-}
-
-.cta-content {
-  max-width: 56rem;
-  margin: 0 auto;
-  text-align: center;
+  padding: 6rem 2rem;
+  background: #fcfcfc;
   position: relative;
   z-index: 10;
 }
 
-.cta-title {
-  font-size: 3rem;
-  font-weight: bold;
-  margin-bottom: 1.5rem;
-  line-height: 1.2;
-}
-
-.cta-gradient-text {
-  display: block;
-  background: linear-gradient(135deg, #6ee7b7, #67e8f9);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.cta-description {
-  font-size: 1.25rem;
-  color: #d1d5db;
-  margin-bottom: 2.5rem;
-  line-height: 1.6;
-}
-
-.btn-cta {
-  padding: 1.25rem 2.5rem;
-  background: white;
-  color: #17181D;
-  border: none;
-  border-radius: 12px;
-  font-weight: bold;
-  font-size: 1.125rem;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.btn-cta:hover {
-  box-shadow: 0 25px 50px rgba(255, 255, 255, 0.2);
-  transform: scale(1.05);
-}
-
-/* Footer */
-.footer {
-  padding: 3rem 1.5rem;
-  background: white;
-  border-top: 1px solid #f3f4f6;
-}
-
-.footer-content {
-  max-width: 1280px;
+.cta-content {
+  max-width: 900px;
   margin: 0 auto;
   text-align: center;
 }
 
-.footer-logo {
+.cta-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: #fcfcfc;
+  padding: 0.6rem 1.2rem;
+  border-radius: 100px;
+  border: 1.5px solid rgba(23, 24, 30, 0.08);
+  margin-bottom: 2rem;
+  font-size: 0.85rem;
+  color: #6b6b6b;
+}
+
+.cta-title {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #17181e;
+  margin-bottom: 1.5rem;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.cta-description {
+  font-size: 1.15rem;
+  color: #6b6b6b;
+  margin-bottom: 2.5rem;
+  line-height: 1.7;
+}
+
+.cta-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 3rem;
+}
+
+.btn-cta {
+  padding: 1.1rem 2.2rem;
+  background: #17181e;
+  color: #fcfcfc;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
   display: flex;
   align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.btn-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(23, 24, 30, 0.2);
+}
+
+.btn-cta-secondary {
+  padding: 1.1rem 2.2rem;
+  background: #fcfcfc;
+  color: #17181e;
+  border: 1.5px solid rgba(23, 24, 30, 0.12);
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cta-secondary:hover {
+  border-color: rgba(23, 24, 30, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(23, 24, 30, 0.08);
+}
+
+.cta-features {
+  display: flex;
+  gap: 2rem;
   justify-content: center;
-  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.cta-feature {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: #6b6b6b;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.cta-feature svg {
+  color: #10b981;
+  flex-shrink: 0;
+}
+
+/* Footer */
+.footer {
+  padding: 4rem 2rem 2rem;
+  background: #f8f8f8;
+  border-top: 1.5px solid rgba(23, 24, 30, 0.06);
+}
+
+.footer-content {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.footer-top {
+  display: grid;
+  grid-template-columns: 1.5fr 2fr;
+  gap: 4rem;
+  margin-bottom: 3rem;
+}
+
+.footer-brand .logo-section {
   margin-bottom: 1rem;
 }
 
 .footer-description {
-  color: #6b7280;
-  margin-bottom: 1.5rem;
+  color: #6b6b6b;
+  font-size: 0.9rem;
+  line-height: 1.7;
 }
 
-.footer-links {
-  display: flex;
-  justify-content: center;
-  gap: 1.5rem;
-  font-size: 0.875rem;
+.footer-links-group {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
 }
 
-.footer-links a {
-  color: #9ca3af;
+.footer-column h4 {
+  color: #17181e;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
+}
+
+.footer-column a {
+  display: block;
+  color: #6b6b6b;
   text-decoration: none;
-  transition: color 0.3s;
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+  transition: color 0.2s;
 }
 
-.footer-links a:hover {
-  color: #10b981;
+.footer-column a:hover {
+  color: #17181e;
+}
+
+.footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 2rem;
+  border-top: 1.5px solid rgba(23, 24, 30, 0.06);
+}
+
+.footer-bottom p {
+  color: #6b6b6b;
+  font-size: 0.85rem;
+}
+
+.social-links {
+  display: flex;
+  gap: 1rem;
+}
+
+.social-link {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fcfcfc;
+  border: 1.5px solid rgba(23, 24, 30, 0.08);
+  border-radius: 8px;
+  color: #6b6b6b;
+  transition: all 0.2s;
+}
+
+.social-link:hover {
+  color: #17181e;
+  border-color: rgba(23, 24, 30, 0.15);
+  transform: translateY(-2px);
 }
 
 /* Responsive */
-@media (max-width: 1024px) {
-  .hero-title {
-    font-size: 3rem;
-  }
-  
-  .section-title {
-    font-size: 2.5rem;
-  }
-  
-  .cta-title {
-    font-size: 2.5rem;
-  }
-}
-
 @media (max-width: 768px) {
   .menu-toggle {
-    display: block;
+    display: flex;
   }
   
   .nav-links {
@@ -1041,45 +1538,29 @@ onUnmounted(() => {
   }
   
   .hero-title {
-    font-size: 2.5rem;
-  }
-  
-  .hero-description {
-    font-size: 1.125rem;
+    font-size: 3rem;
   }
   
   .section-title {
-    font-size: 2rem;
+    font-size: 2.2rem;
   }
   
   .cta-title {
     font-size: 2rem;
   }
   
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  .features-grid {
+  .footer-top {
     grid-template-columns: 1fr;
   }
   
-  .profiles-grid {
+  .footer-links-group {
     grid-template-columns: 1fr;
   }
-}
-
-@media (max-width: 640px) {
-  .hero-buttons {
-    flex-direction: column;
-  }
   
-  .btn-large {
-    width: 100%;
-  }
-  
-  .footer-links {
+  .footer-bottom {
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.5rem;
+    text-align: center;
   }
 }
+</style>
