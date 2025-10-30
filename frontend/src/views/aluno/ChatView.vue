@@ -1,16 +1,14 @@
 <template>
-  <div class="chat-view bg-gradient-to-br from-gray-900 to-black min-h-screen text-white py-10">
-    <div class="container mx-auto px-4">
-      <div class="text-center mb-10">
-        <h1 class="text-4xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-cyan-400">
-          Chat Educacional
-        </h1>
-        <p class="text-gray-400">Converse com colegas e professores</p>
+  <div class="chat-root">
+    <div class="container">
+      <div class="heading">
+        <h1 class="title">Chat Educacional</h1>
+        <p class="subtitle">Converse com colegas e professores</p>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div class="grid">
         <!-- Lista de Contatos -->
-        <div class="lg:col-span-1">
+        <div class="sidebar">
           <GlassCard class="h-full flex flex-col">
             <div class="flex justify-between items-center mb-6">
               <h2 class="text-xl font-bold">Contatos</h2>
@@ -19,7 +17,7 @@
                   v-model="search" 
                   type="text" 
                   placeholder="Buscar..." 
-                  class="bg-gray-800 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                  class="search"
                 >
                 <i class="fas fa-search absolute left-3 top-3 text-gray-500"></i>
               </div>
@@ -38,7 +36,7 @@
         </div>
 
         <!-- Área de Conversa -->
-        <div class="lg:col-span-3">
+        <div class="content">
           <GlassCard class="h-full flex flex-col">
             <ChatWindow 
               v-if="activeContact" 
@@ -94,3 +92,16 @@ export default defineComponent({
   },
 });
 </script>
+
+<style scoped>
+.chat-root { background:#fcfcfc; color:#17181e; min-height:100vh; padding:2rem 0; }
+.container { max-width:1100px; margin:0 auto; padding:0 1rem; }
+.heading { text-align:center; margin-bottom:1rem; }
+.title { font-size:2rem; font-weight:800; }
+.subtitle { color:#6b6b6b; }
+.grid { display:grid; grid-template-columns:1fr; gap:1rem; }
+.sidebar { grid-column:1; }
+.content { grid-column:1; }
+.search { background:#fcfcfc; border:1.5px solid rgba(23,24,30,0.12); border-radius:10px; padding:0.5rem 0.75rem 0.5rem 2rem; }
+@media (min-width:1024px){ .grid { grid-template-columns:1fr 3fr; } }
+</style>

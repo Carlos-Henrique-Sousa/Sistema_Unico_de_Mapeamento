@@ -2,23 +2,19 @@
   <div v-if="isLoading" class="flex items-center justify-center min-h-screen">
     <i class="fas fa-spinner fa-spin text-4xl text-cyan-400"></i>
   </div>
-  <div v-else class="dots-view bg-gradient-to-br from-gray-900 to-black min-h-screen text-white py-10">
-    <div class="container mx-auto px-4">
-      <div class="flex items-center justify-between mb-10">
+  <div v-else class="dots-root">
+    <div class="container">
+      <div class="topbar">
         <div>
-          <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-orange-500">
-            Meu Perfil DOTS
-          </h1>
-          <p class="text-gray-400">Seu desenvolvimento técnico e social</p>
+          <h1 class="title">Meu Perfil DOTS</h1>
+          <p class="subtitle">Seu desenvolvimento técnico e social</p>
         </div>
-        <div class="text-right">
-          <span class="px-4 py-2 bg-amber-500/20 text-amber-400 rounded-full text-sm">
-            Pontuação: {{ totalPoints }}
-          </span>
+        <div class="right">
+          <span class="badge">Pontuação: {{ totalPoints }}</span>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="grid3">
         <!-- Habilidades -->
         <GlassCard class="lg:col-span-2">
           <div class="mb-6">
@@ -57,7 +53,7 @@
       </div>
 
       <!-- Comparação e Análise -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+      <div class="grid2">
         <GlassCard>
           <h2 class="text-2xl font-bold mb-4">Comparação com a Turma</h2>
           <div class="h-80">
@@ -172,3 +168,17 @@ export default defineComponent({
   }
 });
 </script>
+
+<style scoped>
+.dots-root { background:#fcfcfc; color:#17181e; min-height:100vh; padding:2rem 0; }
+.container { max-width:1100px; margin:0 auto; padding:0 1rem; }
+.topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
+.title { font-size:2rem; font-weight:800; }
+.subtitle { color:#6b6b6b; }
+.right { text-align:right; }
+.badge { padding:0.35rem 0.6rem; background:rgba(23,24,30,0.06); border:1px solid rgba(23,24,30,0.1); border-radius:999px; font-size:0.8rem; }
+.grid3 { display:grid; grid-template-columns:1fr; gap:1rem; }
+@media (min-width:1024px){ .grid3 { grid-template-columns: 2fr 1fr; } }
+.grid2 { display:grid; grid-template-columns:1fr; gap:1rem; margin-top:1rem; }
+@media (min-width:1024px){ .grid2 { grid-template-columns: 1fr 1fr; } }
+</style>

@@ -1,14 +1,12 @@
 <template>
-  <div class="exams-view bg-gradient-to-br from-gray-900 to-black min-h-screen text-white py-10">
-    <div class="container mx-auto px-4">
-      <div class="text-center mb-10">
-        <h1 class="text-4xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-cyan-400">
-          Provas Opcionais
-        </h1>
-        <p class="text-gray-400">Teste seus conhecimentos e ganhe pontos DOTS</p>
+  <div class="exams-root">
+    <div class="container">
+      <div class="heading">
+        <h1 class="title">Provas Opcionais</h1>
+        <p class="subtitle">Teste seus conhecimentos e ganhe pontos DOTS</p>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div class="grid">
         <!-- Provas Disponíveis -->
         <GlassCard>
           <h2 class="text-2xl font-bold mb-6">Provas Disponíveis</h2>
@@ -79,3 +77,13 @@ export default defineComponent({
   },
 });
 </script>
+
+<style scoped>
+.exams-root { background:#fcfcfc; color:#17181e; min-height:100vh; padding:2rem 0; }
+.container { max-width:1100px; margin:0 auto; padding:0 1rem; }
+.heading { text-align:center; margin-bottom:1.25rem; }
+.title { font-size:2rem; font-weight:800; }
+.subtitle { color:#6b6b6b; }
+.grid { display:grid; grid-template-columns: 1fr; gap:1rem; }
+@media (min-width: 1024px) { .grid { grid-template-columns: 1fr 1fr; } }
+</style>

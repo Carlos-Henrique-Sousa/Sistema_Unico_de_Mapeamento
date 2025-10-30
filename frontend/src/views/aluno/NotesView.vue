@@ -1,14 +1,12 @@
 <template>
-  <div class="notes-view bg-gradient-to-br from-gray-900 to-black min-h-screen text-white py-10">
-    <div class="container mx-auto px-4">
-      <div class="text-center mb-10">
-        <h1 class="text-4xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-400">
-          Minhas Anotações
-        </h1>
-        <p class="text-gray-400">Organize seu conhecimento</p>
+  <div class="notes-root">
+    <div class="container">
+      <div class="heading">
+        <h1 class="title">Minhas Anotações</h1>
+        <p class="subtitle">Organize seu conhecimento</p>
       </div>
-      <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <div class="lg:col-span-1">
+      <div class="grid">
+        <div class="sidebar">
           <GlassCard class="h-full">
             <div class="flex justify-between items-center mb-6">
               <h2 class="text-xl font-bold">Anotações</h2>
@@ -27,7 +25,7 @@
             </div>
           </GlassCard>
         </div>
-        <div class="lg:col-span-3">
+        <div class="content">
           <GlassCard class="h-full flex flex-col">
             <NoteEditor 
               v-if="selectedNote" 
@@ -119,3 +117,15 @@ export default defineComponent({
   },
 });
 </script>
+
+<style scoped>
+.notes-root { background:#fcfcfc; color:#17181e; min-height:100vh; padding:2rem 0; }
+.container { max-width:1100px; margin:0 auto; padding:0 1rem; }
+.heading { text-align:center; margin-bottom:1.25rem; }
+.title { font-size:2rem; font-weight:800; }
+.subtitle { color:#6b6b6b; }
+.grid { display:grid; grid-template-columns: 1fr; gap:1rem; }
+.sidebar { grid-column: 1; }
+.content { grid-column: 1; }
+@media (min-width: 1024px) { .grid { grid-template-columns: 1fr 3fr; } .sidebar { grid-column:auto; } .content{ grid-column:auto; } }
+</style>

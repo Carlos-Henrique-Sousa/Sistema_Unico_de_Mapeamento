@@ -1,13 +1,13 @@
 <template>
-  <div class="activities-view bg-gradient-to-br from-gray-900 to-black min-h-screen text-white py-10">
-    <div class="container mx-auto px-4">
-      <div class="flex items-center justify-between mb-6">
+  <div class="activities-root">
+    <div class="container">
+      <div class="header">
         <div>
-          <h1 class="text-2xl font-bold">Atividades</h1>
-          <p class="text-gray-400">Suas tarefas e exercícios</p>
+          <h1 class="title">Atividades</h1>
+          <p class="subtitle">Suas tarefas e exercícios</p>
         </div>
-        <div class="flex space-x-3">
-          <select v-model="filter" class="bg-gray-800 rounded-lg px-3 py-2">
+        <div>
+          <select v-model="filter" class="select">
             <option value="all">Todas</option>
             <option value="pending">Pendentes</option>
             <option value="completed">Concluídas</option>
@@ -16,7 +16,7 @@
         </div>
       </div>
 
-      <div v-if="filteredActivities.length" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div v-if="filteredActivities.length" class="grid">
         <ActivityCard 
           v-for="activity in filteredActivities" 
           :key="activity.id"
@@ -28,8 +28,8 @@
           @click="selectActivity(activity)"
         />
       </div>
-      <div v-else class="text-center py-20 text-gray-500">
-        <i class="fas fa-inbox text-5xl mb-4 opacity-30"></i>
+      <div v-else class="empty">
+        <i class="fas fa-inbox"></i>
         <p>Nenhuma atividade encontrada</p>
       </div>
 
@@ -122,3 +122,15 @@ export default defineComponent({
   },
 });
 </script>
+
+<style scoped>
+.activities-root { background:#fcfcfc; color:#17181e; min-height:100vh; padding:2rem 0; }
+.container { max-width:1100px; margin:0 auto; padding:0 1rem; }
+.header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
+.title { font-size:1.6rem; font-weight:800; }
+.subtitle { color:#6b6b6b; }
+.select { padding:0.5rem 0.75rem; border:1.5px solid rgba(23,24,30,0.12); border-radius:10px; background:#fcfcfc; color:#17181e; }
+.grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:1rem; }
+.empty { text-align:center; color:#6b6b6b; padding:4rem 0; }
+.empty i { font-size:42px; opacity:0.3; display:block; margin-bottom:0.5rem; }
+</style>

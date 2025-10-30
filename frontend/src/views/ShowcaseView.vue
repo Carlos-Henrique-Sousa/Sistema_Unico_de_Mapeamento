@@ -128,35 +128,89 @@
         </div>
 
         <div class="features-grid">
-          <div class="feature-card">
+          <div class="feature-card three-beta-card">
             <div class="feature-icon">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="3" width="18" height="14" rx="2"/>
+                <path d="M3 3h18v12H3z"/>
                 <path d="M7 21h10"/>
               </svg>
             </div>
-            <h3 class="feature-title">Mapeamento 3D da Sala</h3>
-            <p class="feature-description">Simulação interativa com visão superior e perspectiva</p>
-            <div class="demo-controls" style="display:flex; gap:0.75rem; align-items:center; flex-wrap: wrap; margin-bottom: 0.75rem;">
-              <label style="font-size:0.85rem; color:#6b6b6b;">Simulação: </label>
-              <select v-model="simType" style="padding:0.4rem 0.6rem; border:1px solid #e5e7eb; border-radius:8px;">
-                <option value="myopia">Miopia</option>
-                <option value="glaucoma">Glaucoma</option>
-                <option value="colorBlindness">Daltonismo</option>
-              </select>
-              <label style="font-size:0.85rem; color:#6b6b6b;">Intensidade: {{ simIntensity }}%</label>
-              <input type="range" min="0" max="100" v-model="simIntensity"/>
+            <h3 class="feature-title">Mapeamento 2D (Beta)</h3>
+            <p class="feature-description">Arraste e solte carteiras, defina grupos (1/2/3) e posicione o professor</p>
+
+            <div class="three-container">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap: 0.75rem; margin-bottom: 0.5rem;">
+                <MapToolbar :tool="tool"
+                  @set-tool="(t: 'select'|'move')=> tool = t"
+                  @rotate="actionRotate"
+                  @delete="actionDelete"
+                  @save="actionSave"
+                  @load="actionLoad"
+                  @export="actionExport"
+                />
+                <div style="display:flex; align-items:center; gap:0.5rem;">
+                  <MapMini :seats="miniSeats" :teacher="miniTeacher" :sourceSize="{ width: 900, height: 520 }" />
+                </div>
+              </div>
+              <div style="display:flex; gap:0.75rem; align-items:flex-start; margin-bottom: 0.5rem;">
+                <MapConfig
+                  :rows="rowsArray"
+                  :teacherPos="teacherPos"
+                  :teacherLabel="teacherLabel"
+                  :background="mapBg"
+                  :alternate="altColors"
+                  :showNumbers="showNumbers"
+                  :showBorders="showBorders"
+                  @update:rows="(v: number[])=>{ rowsArray = v; syncRowsConfig() }"
+                  @update:teacher-pos="(v: 'left'|'center'|'right'|'hidden')=>{ teacherPos = v }"
+                  @update:teacher-label="(v: string)=>{ teacherLabel = v }"
+                  @update:background="(v: string)=>{ mapBg = v }"
+                  @update:alternate="(v: boolean)=>{ altColors = v }"
+                  @update:show-numbers="(v: boolean)=>{ showNumbers = v }"
+                  @update:show-borders="(v: boolean)=>{ showBorders = v }"
+                  @distribute="(m: 'random'|'alpha'|'input'|'mix')=> mapRef?.distribute(m, rules)"
+                  @apply-rules="(r: any)=> { rules = r; }"
+                  @save-defaults="saveDefaults"
+                  @load-defaults="loadDefaults"
+                  @reset-layout="resetLayout"
+                />
+                <div style="display:flex; flex-direction:column; gap:0.5rem; min-width: 260px;">
+                  <label class="overlay-label" style="margin-bottom:4px;">Lista de Alunos</label>
+                  <textarea
+                    class="students-box"
+                    v-model="studentsRaw"
+                    placeholder="Digite um aluno por linha. Opcional: use list:A para misturar listas.\nEx.:\nAna\nBruno list:A\nCarla list:B"
+                  ></textarea>
+                  <div style="display:flex; gap:0.5rem; flex-wrap: wrap;">
+                    <button class="overlay-btn" @click="applyDistribution('random')">Aleatória</button>
+                    <button class="overlay-btn" @click="applyDistribution('alpha')">Alfabética</button>
+                    <button class="overlay-btn" @click="applyDistribution('input')">Entrada</button>
+                    <button class="overlay-btn" @click="applyDistribution('mix')">Misturar Listas</button>
+                  </div>
+                  <button class="overlay-btn" @click="mapRef?.exportCsv()">Exportar CSV</button>
+                  <button class="overlay-btn" @click="mapRef?.printMap()">Imprimir</button>
+                </div>
+              </div>
+              <ClassroomMap2D
+                ref="mapRef"
+                :rows="rows2D"
+                :cols="cols2D"
+                :groupMode="groupMode2D"
+                :snapToGrid="snap2D"
+                :rowsConfig="rowsArray"
+                :teacherArea="teacherPos"
+                :teacherLabel="teacherLabel"
+                :backgroundColor="mapBg"
+                :alternateColors="altColors"
+                :showNumbers="showNumbers"
+                :showBorders="showBorders"
+                :students="students"
+                @update:teacher="(p)=>{ handleTeacherUpdate(p); miniTeacher = { x:p.x, y:p.y, w:42, h:42 } }"
+                @update:seats="(s)=>{ handleSeatsUpdate(s); updateMini(s) }"
+              />
             </div>
-            <ClassroomMap3D 
-              classroom-id="demo-room" 
-              height="360px" 
-              :interactive="true"
-              :seats="{ rows: 5, cols: 8 }"
-              :simulationMode="true"
-              :simulationOptions="{ studentId: '2', type: simType, intensity: Number(simIntensity), showLabels: true }"
-              :showHeatmap="true"
-            />
           </div>
+          
 
           <div class="feature-card">
             <div class="feature-icon">
@@ -418,8 +472,13 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, defineComponent, h } from 'vue'
 import { useRouter } from 'vue-router'
-import ClassroomMap3D from '@/components/classroom/ClassroomMap3D.vue'
+// @ts-ignore
+// 2D mapping demo component
+import ClassroomMap2D from '@/components/classroom/ClassroomMap2D.vue'
+import MapToolbar from '@/components/classroom/MapToolbar.vue'
+import MapMini from '@/components/classroom/MapMini.vue'
 import InteractiveChart from '@/shared/InteractiveChart.vue'
+import MapConfig from '@/components/classroom/MapConfig.vue'
 import SkillRadar from '@/shared/SkillRadar.vue'
 import DynamicTable from '@/shared/DynamicTable.vue'
 
@@ -554,9 +613,7 @@ const radarSkills = [
   { name: 'Colaboração', value: 75, color: '#e1d4c2' }
 ]
 
-// Controls for 3D simulation
-const simType = ref<'myopia'|'glaucoma'|'colorBlindness'>('myopia')
-const simIntensity = ref(45)
+// Removed 3D sim controls
 
 // Demo data for DynamicTable
 const tableColumns = [
@@ -693,6 +750,104 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
 })
+
+// 2D Mapping State (controls wired in Showcase)
+const rows2D = ref(5)
+const cols2D = ref(8)
+const groupMode2D = ref<'single'|'duo'|'trio'>('single')
+const snap2D = ref(true)
+const lastTeacherPos = ref<{ x: number; y: number } | null>(null)
+const handleTeacherUpdate = (p: { x: number; y: number }) => lastTeacherPos.value = p
+const handleSeatsUpdate = (_: any) => {}
+
+const mapRef = ref<InstanceType<typeof ClassroomMap2D> | null>(null)
+const tool = ref<'select'|'move'>('select')
+const actionRotate = () => mapRef.value?.rotateSelection()
+const actionDelete = () => mapRef.value?.deleteSelection()
+const actionSave = () => mapRef.value?.saveLayout()
+const actionLoad = () => mapRef.value?.loadLayout()
+const actionExport = () => mapRef.value?.exportPng()
+const miniSeats = ref<Array<{ x:number;y:number;w:number;h:number }>>([])
+const miniTeacher = ref<{ x:number;y:number;w:number;h:number }>({ x:0,y:0,w:0,h:0 })
+const updateMini = (seats:any[]) => { miniSeats.value = seats.map(s=>({ x:s.x,y:s.y,w:s.w,h:s.h })) }
+
+// Advanced config state
+let rowsArray = ref<number[]>([8,8,8,8,8])
+let teacherPos = ref<'left'|'center'|'right'|'hidden'>('center')
+let teacherLabel = ref('Professor')
+let mapBg = ref('#ffffff')
+let altColors = ref(true)
+let showNumbers = ref(true)
+let showBorders = ref(true)
+let rules = {} as any
+
+// Students input and parsing
+const studentsRaw = ref('')
+const students = ref<Array<{ name:string; list?:string }>>([])
+function parseStudents(raw:string) {
+  const lines = (raw || '').split(/\r?\n/)
+  const res: Array<{ name:string; list?:string }> = []
+  for (const line of lines) {
+    const t = line.trim()
+    if (!t) continue
+    const m = t.match(/^(.*?)(?:\s+list:([A-Za-z0-9_-]+))?$/)
+    if (m) {
+      const name = m[1].trim()
+      const list = m[2]?.trim()
+      if (name) res.push(list ? { name, list } : { name })
+    }
+  }
+  return res
+}
+function applyDistribution(method:'random'|'alpha'|'input'|'mix') {
+  students.value = parseStudents(studentsRaw.value)
+  mapRef.value?.distribute(method, rules)
+}
+
+function syncRowsConfig() {
+  // keep rows2D in sync with number of configured rows if needed
+  rows2D.value = rowsArray.value.length
+}
+
+function saveDefaults() {
+  const data = {
+    rowsArray: rowsArray.value,
+    teacherPos: teacherPos.value,
+    teacherLabel: teacherLabel.value,
+    mapBg: mapBg.value,
+    altColors: altColors.value,
+    showNumbers: showNumbers.value,
+    showBorders: showBorders.value,
+  }
+  localStorage.setItem('sum-map-defaults', JSON.stringify(data))
+}
+
+function loadDefaults() {
+  const raw = localStorage.getItem('sum-map-defaults')
+  if (!raw) return
+  try {
+    const d = JSON.parse(raw)
+    if (Array.isArray(d.rowsArray)) rowsArray.value = d.rowsArray
+    if (d.teacherPos) teacherPos.value = d.teacherPos
+    if (d.teacherLabel) teacherLabel.value = d.teacherLabel
+    if (d.mapBg) mapBg.value = d.mapBg
+    if (typeof d.altColors === 'boolean') altColors.value = d.altColors
+    if (typeof d.showNumbers === 'boolean') showNumbers.value = d.showNumbers
+    if (typeof d.showBorders === 'boolean') showBorders.value = d.showBorders
+    syncRowsConfig()
+  } catch {}
+}
+
+function resetLayout() {
+  rowsArray.value = [8,8,8,8,8]
+  teacherPos.value = 'center'
+  teacherLabel.value = 'Professor'
+  mapBg.value = '#ffffff'
+  altColors.value = true
+  showNumbers.value = true
+  showBorders.value = true
+  syncRowsConfig()
+}
 </script>
 
 <style scoped>
@@ -1165,6 +1320,123 @@ onUnmounted(() => {
 
 .feature-link:hover {
   gap: 0.75rem;
+}
+
+/* Three.js Beta Preview */
+.three-beta-card {
+  grid-column: span 2;
+}
+
+.three-container {
+  position: relative;
+  width: 100%;
+  height: 420px;
+  border: 1.5px solid rgba(23, 24, 30, 0.08);
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fcfcfc;
+}
+
+.overlay-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(252, 252, 252, 0.8);
+  border: 1px solid rgba(23, 24, 30, 0.08);
+  border-radius: 12px;
+  padding: 6px 8px;
+  backdrop-filter: blur(12px);
+}
+
+.overlay-label {
+  font-size: 0.75rem;
+  color: #6b6b6b;
+  padding: 4px 8px;
+}
+
+.overlay-group {
+  display: flex;
+  gap: 6px;
+}
+
+.overlay-btn {
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  border-radius: 10px;
+  background: #fcfcfc;
+  border: 1.5px solid rgba(23, 24, 30, 0.12);
+  color: #17181e;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.overlay-btn:hover {
+  border-color: rgba(23, 24, 30, 0.25);
+  transform: translateY(-1px);
+}
+
+.overlay-btn.active {
+  background: #17181e;
+  color: #fcfcfc;
+  border-color: #17181e;
+}
+
+.overlay-select {
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  border-radius: 10px;
+  background: #fcfcfc;
+  border: 1.5px solid rgba(23, 24, 30, 0.12);
+  color: #17181e;
+}
+
+.students-box {
+  width: 100%;
+  min-height: 100px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #fcfcfc;
+  border: 1.5px solid rgba(23, 24, 30, 0.12);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.85rem;
+  color: #17181e;
+}
+
+.three-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, rgba(23, 24, 30, 0.02), rgba(23, 24, 30, 0));
+}
+
+.fallback-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #fcfcfc;
+  border: 1.5px solid rgba(23, 24, 30, 0.1);
+  border-radius: 12px;
+  padding: 0.8rem 1rem;
+}
+
+.fallback-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+}
+
+.fallback-title {
+  font-weight: 700;
+  color: #17181e;
+  font-size: 0.95rem;
+}
+
+.fallback-desc {
+  color: #6b6b6b;
+  font-size: 0.8rem;
 }
 
 /* Profiles Section */

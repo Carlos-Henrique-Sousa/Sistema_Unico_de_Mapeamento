@@ -17,6 +17,7 @@ const routes: RouteRecordRaw[] = [
   
   // Redireciono rotas antigas de autenticação para a nova entrada
   { path: '/auth/:rest(.*)*', redirect: '/entrar', meta: { public: true } },
+  { path: '/register', name: 'register', component: () => import('@/views/auth/RegisterTest.vue'), meta: { title: 'Cadastro de Teste', public: true } },
 
   // Entrada e seleção de perfis
   {
@@ -41,7 +42,7 @@ const routes: RouteRecordRaw[] = [
   // Rotas do Admin
   {
     path: '/admin',
-    name: 'admin',
+    component: () => import('@/layouts/AdminLayout.vue'),
     redirect: '/admin/system-config',
     meta: { 
       requiresAuth: true, 
@@ -73,7 +74,7 @@ const routes: RouteRecordRaw[] = [
   // Rotas da Escola
   {
     path: '/escola',
-    name: 'escola',
+    component: () => import('@/layouts/EscolaLayout.vue'),
     redirect: '/escola/dashboard',
     meta: { 
       requiresAuth: true, 
@@ -117,7 +118,7 @@ const routes: RouteRecordRaw[] = [
   // Rotas do Professor
   {
     path: '/professor',
-    name: 'professor',
+    component: () => import('@/layouts/ProfessorLayout.vue'),
     redirect: '/professor/dashboard',
     meta: { 
       requiresAuth: true, 
@@ -173,7 +174,7 @@ const routes: RouteRecordRaw[] = [
   // Rotas do Aluno
   {
     path: '/aluno',
-    name: 'aluno',
+    component: () => import('@/layouts/AlunoLayout.vue'),
     redirect: '/aluno/dashboard',
     meta: { 
       requiresAuth: true, 
@@ -260,10 +261,7 @@ router.beforeEach(async (to, from, next) => {
   
   // Verificar autenticação
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    return next({
-      name: 'login',
-      query: { redirect: to.fullPath }
-    })
+    return next({ name: 'entrar', query: { redirect: to.fullPath } })
   }
   
   // Verificar permissões
@@ -291,12 +289,12 @@ router.beforeEach(async (to, from, next) => {
         return next({ name: dashboardRoute })
       }
       
-      return next({ name: 'login' })
+      return next({ name: 'entrar' })
     }
   }
   
   // Se está autenticado e tenta acessar página pública de login, redireciona
-  if (to.name === 'login' && authStore.isAuthenticated) {
+  if ((to.name === 'entrar' || to.name === 'register') && authStore.isAuthenticated) {
     const userRole = authStore.user?.role as UserRole
     const dashboardRoutes: Record<string, string> = {
       'Gestor': 'escola-dashboard',

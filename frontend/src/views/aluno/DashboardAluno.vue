@@ -1,183 +1,75 @@
 <template>
-  <div class="dashboard-aluno bg-gradient-to-br from-gray-900 to-black min-h-screen text-white">
-    <!-- Sidebar de Navegação -->
-    <div class="sidebar fixed left-0 top-0 h-full w-20 bg-gray-900/80 backdrop-blur-md z-50 flex flex-col items-center py-6">
-      <div class="logo mb-10">
-        <div class="w-12 h-12 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-500 flex items-center justify-center">
-          <span class="font-bold text-white">S</span>
-        </div>
+  <div class="dashboard-root">
+    <header class="header">
+      <div>
+        <h1 class="title">Meu Dashboard</h1>
+        <p class="subtitle">Visão geral do seu desempenho</p>
       </div>
-      
-      <nav class="flex-1 space-y-6">
-        <router-link 
-          v-for="item in navItems" 
-          :key="item.name"
-          :to="item.path"
-          class="w-14 h-14 flex items-center justify-center rounded-xl transition-all duration-300"
-          :class="[
-            $route.path === item.path 
-              ? 'bg-gradient-to-r from-cyan-500 to-purple-600 shadow-lg shadow-cyan-500/30' 
-              : 'bg-gray-800 hover:bg-gray-700'
-          ]"
-          v-tooltip.right="item.name"
-        >
-          <i :class="item.icon" class="text-xl"></i>
-        </router-link>
-      </nav>
-      
-      <div class="mt-auto">
-        <button 
-          @click="logout"
-          class="w-14 h-14 flex items-center justify-center rounded-xl bg-gray-800 hover:bg-rose-600/80 transition-colors"
-          v-tooltip.right="'Sair'"
-        >
-          <i class="fas fa-sign-out-alt"></i>
-        </button>
-      </div>
-    </div>
+    </header>
 
-    <!-- Conteúdo Principal -->
-    <div class="main-content ml-20 p-6">
-      <!-- Cabeçalho -->
-      <header class="flex justify-between items-center mb-8">
-        <div>
-          <h1 class="text-3xl font-bold">{{ currentPageTitle }}</h1>
-          <p class="text-gray-400">{{ currentPageDescription }}</p>
-        </div>
-        
-        <div class="flex items-center space-x-4">
-          <div class="relative">
-            <button class="bg-gray-800 hover:bg-gray-700 p-3 rounded-full">
-              <i class="fas fa-bell"></i>
-            </button>
-            <span class="absolute top-1 right-1 w-3 h-3 bg-rose-500 rounded-full"></span>
-          </div>
-          
-          <div class="flex items-center space-x-3 bg-gray-800/80 px-4 py-2 rounded-full">
-            <div class="w-10 h-10 rounded-full bg-gradient-to-r from-cyan-500 to-purple-500 flex items-center justify-center text-white font-bold">
-              {{ userInitials }}
-            </div>
-            <div>
-              <p class="font-medium">{{ userName }}</p>
-              <p class="text-xs text-gray-400">{{ userRole }}</p>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <!-- Conteúdo Dinâmico -->
-      <div class="dashboard-content">
-        <router-view></router-view>
+    <section class="cards-grid">
+      <div class="card kpi">
+        <div class="kpi-label">Atividades Pendentes</div>
+        <div class="kpi-value accent-blue">5</div>
       </div>
-    </div>
+      <div class="card kpi">
+        <div class="kpi-label">Próxima Prova</div>
+        <div class="kpi-value">02/12</div>
+      </div>
+      <div class="card kpi">
+        <div class="kpi-label">Desempenho</div>
+        <div class="kpi-value accent-green">85%</div>
+        <div class="bar"><span style="width:85%"></span></div>
+      </div>
+    </section>
+
+    <section class="panels">
+      <div class="card panel">
+        <h3 class="panel-title">Atalhos Rápidos</h3>
+        <div class="quick-actions">
+          <router-link class="qa" to="/aluno/activities">Atividades</router-link>
+          <router-link class="qa" to="/aluno/exams">Provas</router-link>
+          <router-link class="qa" to="/aluno/notes">Anotações</router-link>
+          <router-link class="qa" to="/aluno/classroom">Minha Sala</router-link>
+        </div>
+      </div>
+      <div class="card panel">
+        <h3 class="panel-title">Resumo Semanal</h3>
+        <ul class="list">
+          <li><span>Atividades entregues</span><b>7</b></li>
+          <li><span>Tempo de estudo</span><b>4h 20m</b></li>
+          <li><span>Mensagens no chat</span><b>12</b></li>
+        </ul>
+      </div>
+    </section>
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, computed } from 'vue';
-import { useRouter } from 'vue-router';
-import { useAuthStore } from '../../store/auth';
-
-export default defineComponent({
-  name: 'DashboardAluno',
-  setup() {
-    const router = useRouter();
-    const authStore = useAuthStore();
-    
-    const navItems = ref([
-      { name: 'Dashboard', path: '/aluno/dashboard', icon: 'fas fa-home' },
-      { name: 'DOTS', path: '/aluno/dots', icon: 'fas fa-star' },
-      { name: 'Sala de Aula', path: '/aluno/sala', icon: 'fas fa-chalkboard' },
-      { name: 'Atividades', path: '/aluno/atividades', icon: 'fas fa-book' },
-      { name: 'Provas', path: '/aluno/provas', icon: 'fas fa-file-alt' },
-      { name: 'Anotações', path: '/aluno/anotacoes', icon: 'fas fa-sticky-note' },
-      { name: 'Chat', path: '/aluno/chat', icon: 'fas fa-comments' },
-    ]);
-    
-    const pageTitles = {
-      '/aluno/dashboard': 'Dashboard',
-      '/aluno/dots': 'Perfil DOTS',
-      '/aluno/sala': 'Sala de Aula',
-      '/aluno/atividades': 'Atividades',
-      '/aluno/provas': 'Provas Opcionais',
-      '/aluno/anotacoes': 'Anotações',
-      '/aluno/chat': 'Chat Educacional',
-    };
-    
-    const pageDescriptions = {
-      '/aluno/dashboard': 'Visão geral do seu desempenho',
-      '/aluno/dots': 'Seu desenvolvimento técnico e social',
-      '/aluno/sala': 'Visualização da sua sala e grupo',
-      '/aluno/atividades': 'Suas tarefas e exercícios',
-      '/aluno/provas': 'Teste seus conhecimentos',
-      '/aluno/anotacoes': 'Organize seu conhecimento',
-      '/aluno/chat': 'Converse com colegas e professores',
-    };
-    
-    const currentPageTitle = computed(() => {
-      return pageTitles[router.currentRoute.value.path as keyof typeof pageTitles] || 'Dashboard';
-    });
-    
-    const currentPageDescription = computed(() => {
-      return pageDescriptions[router.currentRoute.value.path as keyof typeof pageDescriptions] || 'Visão geral do seu desempenho';
-    });
-    
-    const userName = computed(() => authStore.user?.name || 'Aluno');
-    const userRole = computed(() => authStore.user?.role || 'Aluno');
-    
-    const userInitials = computed(() => {
-      const names = userName.value.split(' ');
-      return names.length > 1 
-        ? `${names[0][0]}${names[names.length - 1][0]}`
-        : names[0][0];
-    });
-    
-    const logout = () => {
-      authStore.logout();
-      router.push('/login');
-    };
-    
-    return { 
-      navItems, 
-      currentPageTitle,
-      currentPageDescription,
-      userName,
-      userRole,
-      userInitials,
-      logout
-    };
-  },
-});
+<script setup lang="ts">
 </script>
 
 <style scoped>
-.sidebar {
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
-}
+.dashboard-root { padding: 2rem; background:#fcfcfc; color:#17181e; }
+.header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; }
+.title { font-size: 2rem; font-weight: 800; letter-spacing:-0.01em; }
+.subtitle { color:#6b6b6b; margin-top:0.25rem; }
 
-.dashboard-aluno {
-  background-image: 
-    radial-gradient(circle at 10% 20%, rgba(87, 108, 188, 0.1) 0%, transparent 20%),
-    radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 20%);
-}
+.cards-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap:1rem; margin-bottom:1rem; }
+.card { background:#fcfcfc; border:1.5px solid rgba(23,24,30,0.08); border-radius:14px; padding:1rem; }
+.kpi { display:flex; flex-direction:column; gap:0.5rem; }
+.kpi-label { color:#6b6b6b; font-size:0.9rem; }
+.kpi-value { font-size:1.9rem; font-weight:800; line-height:1; }
+.accent-blue { color:#0f1e3f; }
+.accent-green { color:#2d531a; }
+.bar { margin-top:0.25rem; height:6px; background:rgba(23,24,30,0.06); border-radius:999px; overflow:hidden; }
+.bar span { display:block; height:100%; background:#2d531a; }
 
-.dashboard-content {
-  min-height: calc(100vh - 150px);
-}
-
-.router-link-active {
-  position: relative;
-}
-
-.router-link-active::after {
-  content: '';
-  position: absolute;
-  left: -4px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 4px;
-  height: 24px;
-  background: linear-gradient(to bottom, #00c6ff, #0072ff);
-  border-radius: 0 4px 4px 0;
-}
+.panels { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:1rem; }
+.panel-title { font-size:1rem; font-weight:700; margin-bottom:0.75rem; }
+.quick-actions { display:flex; flex-wrap:wrap; gap:0.5rem; }
+.qa { padding:0.5rem 0.75rem; border:1.5px solid rgba(23,24,30,0.12); border-radius:10px; color:#17181e; text-decoration:none; background:#fcfcfc; }
+.qa:hover { border-color:rgba(23,24,30,0.25); }
+.list { display:flex; flex-direction:column; gap:0.5rem; }
+.list li { display:flex; align-items:center; justify-content:space-between; padding:0.35rem 0; color:#17181e; }
+.list span { color:#6b6b6b; }
 </style>

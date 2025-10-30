@@ -4,14 +4,6 @@ declare module '*.vue' {
   export default component
 }
 
-declare module 'vue' {
-  export * from '@vue/runtime-core'
-}
-
-declare module 'vue-router' {
-  export * from '@vue/router'
-}
-
 declare module '@/shared/InteractiveChart.vue' {
   import type { DefineComponent } from 'vue'
   const component: DefineComponent<{
