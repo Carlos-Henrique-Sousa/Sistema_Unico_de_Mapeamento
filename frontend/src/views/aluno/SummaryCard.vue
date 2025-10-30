@@ -1,5 +1,5 @@
 <template>
-  <div class="summary-root">
+  <div class="summary-root card-style">
     <div class="row">
       <div>
         <h3 class="title">{{ title }}</h3>
@@ -9,7 +9,7 @@
         <i :class="icon" class="icon"></i>
       </div>
     </div>
-    <div class="bar"><span :style="{ width: progress + '%' }"></span></div>
+    <div class="bar"><span :style="{ width: progress + '%', background: 'var(--cor-azul-prim)' }"></span></div>
   </div>
 </template>
 
@@ -29,12 +29,13 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.summary-root { background:#fcfcfc; border:1.5px solid rgba(23,24,30,0.08); border-radius:14px; padding:1rem; color:#17181e; }
-.row { display:flex; align-items:flex-start; justify-content:space-between; }
-.title { font-size:0.95rem; color:#6b6b6b; margin-bottom:0.25rem; }
-.value { font-size:1.6rem; font-weight:800; }
-.icon-wrap { background:rgba(23,24,30,0.06); border:1px solid rgba(23,24,30,0.1); border-radius:12px; padding:0.5rem; }
-.icon { font-size:1.1rem; }
-.bar { margin-top:0.75rem; height:6px; background:rgba(23,24,30,0.06); border-radius:999px; overflow:hidden; }
-.bar span { display:block; height:100%; background:#2d531a; }
+.summary-root { background:rgba(23,24,30,0.94); box-shadow:0 3.5px 19px rgba(52,152,219,0.13); border-radius:18px; border:1.7px solid var(--cor-azul-prim); color:var(--cor-primaria); padding:1.25rem 1rem; }
+.row { display:flex; align-items:center; justify-content:space-between; }
+.title { font-size:1.15rem; color:var(--cor-azul-light); margin-bottom:0.36rem; font-weight:700; }
+.value { font-size:2.07rem; font-weight:900; color:var(--cor-primaria); letter-spacing:-0.01em; }
+.icon-wrap { background:rgba(52,152,219,0.19); border:1px solid var(--cor-azul-prim); border-radius:12px; padding:0.7rem; display:flex; align-items:center; justify-content:center; }
+.icon { font-size:1.55rem; color:var(--cor-azul-sec); }
+.bar { margin-top:0.93rem; height:7px; background:rgba(52,152,219,0.15); border-radius:16px; overflow:hidden; }
+.bar span { display:block; height:100%; border-radius:16px; }
+@media(max-width:700px){.summary-root{padding:0.95rem 6px;}}
 </style>

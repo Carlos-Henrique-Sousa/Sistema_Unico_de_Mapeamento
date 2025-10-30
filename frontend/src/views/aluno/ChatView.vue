@@ -9,20 +9,18 @@
       <div class="grid">
         <!-- Lista de Contatos -->
         <div class="sidebar">
-          <GlassCard class="h-full flex flex-col">
-            <div class="flex justify-between items-center mb-6">
-              <h2 class="text-xl font-bold">Contatos</h2>
+          <GlassCard class="h-full flex flex-col blue-glass">
+            <div class="flex justify-between items-center mb-7">
+              <h2 class="text-xl font-extrabold">Contatos</h2>
               <div class="relative">
                 <input 
                   v-model="search" 
                   type="text" 
                   placeholder="Buscar..." 
-                  class="search"
-                >
-                <i class="fas fa-search absolute left-3 top-3 text-gray-500"></i>
+                  class="search" />
+                <i class="fas fa-search absolute left-4 top-4 text-blue-500"></i>
               </div>
             </div>
-            
             <div class="space-y-3 flex-1 overflow-y-auto">
               <ContactItem 
                 v-for="contact in filteredContacts" 
@@ -37,13 +35,13 @@
 
         <!-- Área de Conversa -->
         <div class="content">
-          <GlassCard class="h-full flex flex-col">
+          <GlassCard class="h-full flex flex-col blue-glass">
             <ChatWindow 
               v-if="activeContact" 
               :contact="activeContact" 
             />
-            <div v-else class="flex flex-col items-center justify-center h-full text-gray-500 py-20">
-              <i class="fas fa-comments text-5xl mb-4 opacity-30"></i>
+            <div v-else class="flex flex-col items-center justify-center h-full text-blue-400 py-20">
+              <i class="fas fa-comments text-5xl mb-4 opacity-15"></i>
               <p class="text-xl">Selecione um contato para iniciar uma conversa</p>
             </div>
           </GlassCard>
@@ -94,14 +92,16 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.chat-root { background:#fcfcfc; color:#17181e; min-height:100vh; padding:2rem 0; }
+.chat-root { background:var(--cor-fundo); color:var(--cor-primaria); min-height:100vh; padding:2.5rem 0; }
 .container { max-width:1100px; margin:0 auto; padding:0 1rem; }
-.heading { text-align:center; margin-bottom:1rem; }
-.title { font-size:2rem; font-weight:800; }
-.subtitle { color:#6b6b6b; }
-.grid { display:grid; grid-template-columns:1fr; gap:1rem; }
+.heading { text-align:center; margin-bottom:2rem; }
+.title { font-size:2.1rem; font-weight:900; color:var(--cor-primaria); }
+.subtitle { color:var(--cor-azul-light); }
+.grid { display:grid; grid-template-columns:1fr; gap:1.2rem; }
 .sidebar { grid-column:1; }
 .content { grid-column:1; }
-.search { background:#fcfcfc; border:1.5px solid rgba(23,24,30,0.12); border-radius:10px; padding:0.5rem 0.75rem 0.5rem 2rem; }
-@media (min-width:1024px){ .grid { grid-template-columns:1fr 3fr; } }
+.blue-glass { background:rgba(52, 152, 219, 0.08) !important; border:1.4px solid var(--cor-azul-prim) !important; }
+.search { background:var(--cor-fundo); border:1.5px solid var(--cor-azul-prim); border-radius:12px; padding:0.62rem 0.9rem 0.62rem 2.6rem; color:var(--cor-primaria); font-weight:600; min-width:142px; outline:none; font-size:1.08rem; }
+@media (min-width:1024px){ .grid { grid-template-columns:1.05fr 2.95fr; }}
+@media(max-width:700px){ .container{padding:0 2vw;} .grid{grid-template-columns:1fr;}}
 </style>

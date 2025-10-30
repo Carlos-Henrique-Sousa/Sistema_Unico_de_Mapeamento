@@ -5,11 +5,10 @@
         <h1 class="title">Provas Opcionais</h1>
         <p class="subtitle">Teste seus conhecimentos e ganhe pontos DOTS</p>
       </div>
-
       <div class="grid">
         <!-- Provas Disponíveis -->
-        <GlassCard>
-          <h2 class="text-2xl font-bold mb-6">Provas Disponíveis</h2>
+        <GlassCard class="blue-glass">
+          <h2 class="text-2xl font-extrabold mb-6 text-blue-400">Provas Disponíveis</h2>
           <div class="space-y-4">
             <ExamCard 
               v-for="exam in availableExams" 
@@ -19,12 +18,11 @@
             />
           </div>
         </GlassCard>
-
         <!-- Minhas Tentativas -->
-        <GlassCard>
-          <h2 class="text-2xl font-bold mb-6">Minhas Tentativas</h2>
-          <div v-if="attempts.length === 0" class="text-center py-10 text-gray-500">
-            <i class="fas fa-inbox text-4xl mb-4 opacity-30"></i>
+        <GlassCard class="blue-glass">
+          <h2 class="text-2xl font-extrabold mb-6 text-blue-400">Minhas Tentativas</h2>
+          <div v-if="attempts.length === 0" class="text-center py-10 text-blue-300">
+            <i class="fas fa-inbox text-4xl mb-4 opacity-20"></i>
             <p>Nenhuma tentativa registrada</p>
           </div>
           <div v-else class="space-y-4">
@@ -36,10 +34,9 @@
           </div>
         </GlassCard>
       </div>
-
       <!-- Criador de Provas -->
-      <GlassCard class="mt-8">
-        <h2 class="text-2xl font-bold mb-6">Criar Prova Personalizada</h2>
+      <GlassCard class="blue-glass mt-8">
+        <h2 class="text-2xl font-extrabold mb-6 text-blue-400">Criar Prova Personalizada</h2>
         <ExamCreator />
       </GlassCard>
     </div>
@@ -79,11 +76,13 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.exams-root { background:#fcfcfc; color:#17181e; min-height:100vh; padding:2rem 0; }
+.exams-root { background:var(--cor-fundo); color:var(--cor-primaria); min-height:100vh; padding:2.3rem 0; }
 .container { max-width:1100px; margin:0 auto; padding:0 1rem; }
-.heading { text-align:center; margin-bottom:1.25rem; }
-.title { font-size:2rem; font-weight:800; }
-.subtitle { color:#6b6b6b; }
-.grid { display:grid; grid-template-columns: 1fr; gap:1rem; }
+.heading { text-align:center; margin-bottom:2rem; }
+.title { font-size:2.15rem; font-weight:900; color:var(--cor-primaria); }
+.subtitle { color:var(--cor-azul-light); }
+.grid { display:grid; grid-template-columns: 1fr; gap:1.22rem; }
 @media (min-width: 1024px) { .grid { grid-template-columns: 1fr 1fr; } }
+.blue-glass { background:rgba(52,152,219,0.11) !important; border:1.5px solid var(--cor-azul-prim) !important; box-shadow:0 3.5px 19px rgba(52,152,219,0.13) !important; }
+@media(max-width:700px){ .container{padding:0 2vw;} }
 </style>

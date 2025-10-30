@@ -7,10 +7,10 @@
       </div>
       <div class="grid">
         <div class="sidebar">
-          <GlassCard class="h-full">
-            <div class="flex justify-between items-center mb-6">
-              <h2 class="text-xl font-bold">Anotações</h2>
-              <button @click="createNewNote" class="bg-emerald-600 hover:bg-emerald-500 w-8 h-8 rounded-full flex items-center justify-center">
+          <GlassCard class="h-full blue-glass">
+            <div class="flex justify-between items-center mb-7">
+              <h2 class="text-xl font-extrabold">Anotações</h2>
+              <button @click="createNewNote" class="button-main w-10 h-10 rounded-full flex items-center justify-center !py-0 !px-0">
                 <i class="fas fa-plus"></i>
               </button>
             </div>
@@ -26,17 +26,17 @@
           </GlassCard>
         </div>
         <div class="content">
-          <GlassCard class="h-full flex flex-col">
+          <GlassCard class="h-full flex flex-col blue-glass">
             <NoteEditor 
               v-if="selectedNote" 
               :note="selectedNote" 
               @save="saveNote"
               @delete="deleteNote"
             />
-            <div v-else class="flex flex-col items-center justify-center h-full text-gray-500 py-20">
-              <i class="fas fa-sticky-note text-5xl mb-4 opacity-30"></i>
+            <div v-else class="flex flex-col items-center justify-center h-full text-blue-400 py-20">
+              <i class="fas fa-sticky-note text-5xl mb-4 opacity-20"></i>
               <p class="text-xl">Selecione uma anotação ou crie uma nova</p>
-              <button @click="createNewNote" class="mt-6 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 rounded-lg transition-colors">
+              <button @click="createNewNote" class="mt-6 px-6 py-3 button-main rounded-lg transition-colors">
                 Criar Nova Anotação
               </button>
             </div>
@@ -119,13 +119,17 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.notes-root { background:#fcfcfc; color:#17181e; min-height:100vh; padding:2rem 0; }
+.notes-root { background:var(--cor-fundo); color:var(--cor-primaria); min-height:100vh; padding:2.2rem 0; }
 .container { max-width:1100px; margin:0 auto; padding:0 1rem; }
-.heading { text-align:center; margin-bottom:1.25rem; }
-.title { font-size:2rem; font-weight:800; }
-.subtitle { color:#6b6b6b; }
-.grid { display:grid; grid-template-columns: 1fr; gap:1rem; }
+.heading { text-align:center; margin-bottom:2rem; }
+.title { font-size:2.15rem; font-weight:900; color:var(--cor-primaria); }
+.subtitle { color:var(--cor-azul-light); }
+.grid { display:grid; grid-template-columns: 1fr; gap:1.22rem; }
 .sidebar { grid-column: 1; }
 .content { grid-column: 1; }
-@media (min-width: 1024px) { .grid { grid-template-columns: 1fr 3fr; } .sidebar { grid-column:auto; } .content{ grid-column:auto; } }
+@media (min-width: 1024px) { .grid { grid-template-columns: 1fr 2.8fr; } .sidebar { grid-column:auto; } .content{ grid-column:auto; } }
+.blue-glass { background:rgba(52,152,219,0.11) !important; border:1.5px solid var(--cor-azul-prim) !important; box-shadow:0 3.5px 19px rgba(52,152,219,0.13) !important; }
+.button-main{ background:var(--cor-azul-prim); color:var(--cor-primaria); border-radius: 12px; font-weight: 700; box-shadow: 0 2px 20px rgba(58,134,255,0.10); padding: 10px 24px; transition: background 0.15s, box-shadow 0.15s; border:none; outline:none; }
+.button-main:hover{ background:var(--cor-azul-sec); box-shadow: 0 6px 24px rgba(58,134,255,0.12); }
+@media(max-width:700px){ .container{padding:0 2vw;} }
 </style>

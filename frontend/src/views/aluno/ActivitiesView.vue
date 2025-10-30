@@ -26,6 +26,7 @@
           :priority="'medium'"
           :participants="[]"
           @click="selectActivity(activity)"
+          class="card-style"
         />
       </div>
       <div v-else class="empty">
@@ -124,13 +125,14 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.activities-root { background:#fcfcfc; color:#17181e; min-height:100vh; padding:2rem 0; }
+.activities-root { background:var(--cor-fundo); color:var(--cor-primaria); min-height:100vh; padding:2.5rem 0; }
 .container { max-width:1100px; margin:0 auto; padding:0 1rem; }
-.header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
-.title { font-size:1.6rem; font-weight:800; }
-.subtitle { color:#6b6b6b; }
-.select { padding:0.5rem 0.75rem; border:1.5px solid rgba(23,24,30,0.12); border-radius:10px; background:#fcfcfc; color:#17181e; }
-.grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:1rem; }
-.empty { text-align:center; color:#6b6b6b; padding:4rem 0; }
-.empty i { font-size:42px; opacity:0.3; display:block; margin-bottom:0.5rem; }
+.header { display:flex; align-items:center; justify-content:space-between; margin-bottom:2rem; }
+.title { font-size:2.0rem; font-weight:900; color:var(--cor-primaria); margin-bottom:0.18rem; letter-spacing:-0.5px; }
+.subtitle { color:var(--cor-azul-light); font-size:1.08rem; font-weight:500; }
+.select { padding:0.68rem 0.9rem; min-width:148px; border:1.5px solid var(--cor-azul-prim); border-radius:14px; background:var(--cor-fundo); color:var(--cor-primaria); font-weight:600; outline:none; font-size:1.02rem; box-shadow:0 1.5px 10px rgba(58,134,255,0.04); }
+.grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(305px, 1fr)); gap:1.35rem; }
+.empty { text-align:center; color:var(--cor-cinza); padding:4rem 0; }
+.empty i { font-size:52px; opacity:0.15; display:block; margin-bottom:0.7rem; color:var(--cor-azul-light); }
+@media(max-width:700px){ .container{padding:0 2vw;} .header{flex-direction:column;gap:1.2rem;align-items:flex-start;}}
 </style>
