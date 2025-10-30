@@ -32,9 +32,65 @@
           </div>
         </div>
         
-        <div class="classroom-editor-container bg-gray-800/20 rounded-xl p-4 min-h-[500px]">
-          <ClassroomMapEditor v-if="viewMode === '3d'" :classroomId="selectedClass" />
-          <ClassroomGridEditor v-else />
+        <div class="classroom-editor-container bg-gray-800/20 rounded-xl p-4 min-h-[500px] grid grid-cols-1 lg:grid-cols-4 gap-4">
+          <div class="lg:col-span-1">
+            <MapConfig
+              :rows="rowsConfig"
+              :teacher-pos="teacherPos"
+              :teacher-label="teacherLabel"
+              :background="background"
+              :alternate="alternate"
+              :show-numbers="showNumbers"
+              :show-borders="showBorders"
+              @update:rows="v => rowsConfig = v"
+              @update:teacher-pos="v => teacherPos = v"
+              @update:teacher-label="v => teacherLabel = v"
+              @update:background="v => background = v"
+              @update:alternate="v => alternate = v"
+              @update:show-numbers="v => showNumbers = v"
+              @update:show-borders="v => showBorders = v"
+              @distribute="method => mapRef?.distribute(method, rules)"
+              @apply-rules="v => { rules = v; }"
+              @save-defaults="saveDefaults"
+              @load-defaults="loadDefaults"
+              @reset-layout="resetLayout"
+            />
+            <div class="mt-4 space-y-2">
+              <h4 class="text-sm font-semibold text-gray-300">Objetos da Sala</h4>
+              <div class="grid grid-cols-2 gap-2">
+                <button class="px-3 py-2 bg-gray-700 rounded hover:bg-gray-600" @click="addObject('locker')"><i class="fas fa-box mr-2"></i>Armário</button>
+                <button class="px-3 py-2 bg-gray-700 rounded hover:bg-gray-600" @click="addObject('computer')"><i class="fas fa-desktop mr-2"></i>Computador</button>
+                <button class="px-3 py-2 bg-gray-700 rounded hover:bg-gray-600" @click="addObject('desk')"><i class="fas fa-table mr-2"></i>Mesa</button>
+                <button class="px-3 py-2 bg-gray-700 rounded hover:bg-gray-600" @click="addObject('custom')"><i class="fas fa-cube mr-2"></i>Custom</button>
+              </div>
+              <div class="flex gap-2">
+                <button class="flex-1 px-3 py-2 bg-red-700 rounded hover:bg-red-600" @click="removeAllObjects"><i class="fas fa-trash mr-2"></i>Remover Objetos</button>
+              </div>
+            </div>
+            <div class="mt-3 flex gap-2">
+              <button class="px-3 py-2 bg-cyan-600 rounded" @click="mapRef?.exportPng()">Exportar PNG</button>
+              <button class="px-3 py-2 bg-amber-600 rounded" @click="mapRef?.exportCsv()">Exportar Excel</button>
+              <button class="px-3 py-2 bg-gray-700 rounded" @click="mapRef?.printMap()">Imprimir</button>
+            </div>
+          </div>
+          <div class="lg:col-span-3">
+            <ClassroomMap2D
+              ref="mapRef"
+              :rows="rowsConfig.length"
+              :cols="Math.max(...rowsConfig, 0)"
+              groupMode="single"
+              :rowsConfig="rowsConfig"
+              :students="studentsForMap"
+              :alternateColors="alternate"
+              :showNumbers="showNumbers"
+              :showBorders="showBorders"
+              :backgroundColor="background"
+              :teacherArea="teacherPos"
+              :teacherLabel="teacherLabel"
+              :editable="true"
+              :objects="objects"
+            />
+          </div>
         </div>
       </GlassCard>
       
@@ -102,13 +158,15 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
+import { defineComponent, ref, computed } from 'vue';
 import GlassCard from '@/shared/GlassCard.vue';
 import ClassroomMapEditor from '@components/classroom/ClassroomMapEditor.vue';
 import ClassroomGridEditor from '@components/classroom/ClassroomGridEditor.vue';
 import StudentAnalysisView from '@views/professor/StudentAnalysisView.vue';
 import DynamicTable from '@/shared/DynamicTable.vue';
 import ProgressRing from '@/shared/ProgressRing.vue';
+import MapConfig from '@components/classroom/MapConfig.vue';
+import ClassroomMap2D from '@components/classroom/ClassroomMap2D.vue';
 
 export default defineComponent({
   name: 'ClassManagementView',
@@ -123,6 +181,15 @@ export default defineComponent({
   setup() {
     const selectedClass = ref('1A');
     const viewMode = ref('3d');
+    const mapRef = ref<InstanceType<typeof ClassroomMap2D> | null>(null);
+    const rowsConfig = ref<number[]>([6,6,6,6,6]);
+    const teacherPos = ref<'left'|'center'|'right'|'hidden'>('center');
+    const teacherLabel = ref('Prof');
+    const background = ref('#f8fafc');
+    const alternate = ref(true);
+    const showNumbers = ref(true);
+    const showBorders = ref(true);
+    let rules: any = {};
     
     const students = ref([
       { id: 1, name: 'João Silva', initials: 'JS', math: 85, language: 78, status: 'Ativo' },
@@ -130,6 +197,36 @@ export default defineComponent({
       { id: 3, name: 'Carlos Pereira', initials: 'CP', math: 76, language: 95, status: 'Ativo' },
       { id: 4, name: 'Ana Costa', initials: 'AC', math: 88, language: 82, status: 'Inativo' }
     ]);
+    const studentsForMap = computed(() => students.value.map(s => ({ name: s.name })));
+
+    const objects = ref<Array<{ id:string; type:'locker'|'computer'|'desk'|'custom'; x:number; y:number; w:number; h:number; label?:string }>>([])
+    const addObject = (type:'locker'|'computer'|'desk'|'custom') => {
+      mapRef.value?.addObject?.(type)
+      // local mirror: rely on map internal; optional sync if needed later
+    }
+    const removeAllObjects = () => {
+      mapRef.value?.removeAllObjects?.()
+      objects.value = []
+    }
+
+    const saveDefaults = () => {
+      localStorage.setItem('sum-map-defaults', JSON.stringify({ rowsConfig: rowsConfig.value, teacherPos: teacherPos.value, teacherLabel: teacherLabel.value, background: background.value, alternate: alternate.value, showNumbers: showNumbers.value, showBorders: showBorders.value }));
+    };
+    const loadDefaults = () => {
+      const raw = localStorage.getItem('sum-map-defaults');
+      if (!raw) return;
+      try {
+        const data = JSON.parse(raw);
+        if (Array.isArray(data.rowsConfig)) rowsConfig.value = data.rowsConfig;
+        if (data.teacherPos) teacherPos.value = data.teacherPos;
+        if (data.teacherLabel) teacherLabel.value = data.teacherLabel;
+        if (data.background) background.value = data.background;
+        if (typeof data.alternate === 'boolean') alternate.value = data.alternate;
+        if (typeof data.showNumbers === 'boolean') showNumbers.value = data.showNumbers;
+        if (typeof data.showBorders === 'boolean') showBorders.value = data.showBorders;
+      } catch {}
+    };
+    const resetLayout = () => { rowsConfig.value = [6,6,6,6,6]; };
     
     const statusClass = (status: 'Ativo' | 'Inativo' | 'Transferido') => {
       const classes: Record<'Ativo' | 'Inativo' | 'Transferido', string> = {
@@ -143,7 +240,22 @@ export default defineComponent({
     return {
       selectedClass,
       viewMode,
+      mapRef,
+      rowsConfig,
+      teacherPos,
+      teacherLabel,
+      background,
+      alternate,
+      showNumbers,
+      showBorders,
       students,
+      studentsForMap,
+      objects,
+      addObject,
+      removeAllObjects,
+      saveDefaults,
+      loadDefaults,
+      resetLayout,
       statusClass
     };
   }

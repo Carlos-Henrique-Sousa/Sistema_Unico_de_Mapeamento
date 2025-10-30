@@ -2,6 +2,7 @@ from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from . import views
 from . import health_views
+from . import ai_views
 
 app_name = 'core'
 
@@ -28,4 +29,9 @@ urlpatterns = [
     path('health/', health_views.health_check, name='health-check'),
     path('health/detailed/', health_views.detailed_health, name='detailed-health'),
     path('metrics/', health_views.system_metrics, name='system-metrics'),
+
+    # AI helper endpoints (minimal placeholders)
+    path('ai/chat/', ai_views.chat, name='ai-chat'),
+    path('ai/generate-notes/', ai_views.generate_notes, name='ai-generate-notes'),
+    path('ai/analyze-dots/<int:user_id>/', ai_views.analyze_dots, name='ai-analyze-dots'),
 ]

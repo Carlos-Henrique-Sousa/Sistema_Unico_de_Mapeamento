@@ -28,6 +28,11 @@ urlpatterns = [
     # Core (autenticação)
     path('api/auth/', include('core.urls')),
 
+    # AI endpoints
+    # Included inside core app paths already; exposed here via /api/auth/ai/*
+    # Frontend calls use /api/ai/*, so include a direct alias as well
+    path('api/ai/', include(('core.urls', 'core'), namespace='ai_alias')),
+
     # Apps principais
     path('api/escola/', include(('escola.urls', 'escola'), namespace='escola')),
     path('api/estudantes/', include(('estudantes.urls', 'estudantes'), namespace='estudantes')),
@@ -35,6 +40,9 @@ urlpatterns = [
     path('api/atividades/', include(('atividades.urls', 'atividades'), namespace='atividades')),
     path('api/eventos/', include(('eventos.urls', 'eventos'), namespace='eventos')),
     path('api/mapeamento/', include(('placement.urls', 'placement'), namespace='placement')),
+
+    # DOTS endpoints
+    path('api/dots/', include(('estudantes.dots_urls', 'dots'), namespace='dots')),
 ]
 
 # Configuração para servir arquivos estáticos em desenvolvimento

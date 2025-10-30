@@ -39,6 +39,10 @@ const props = defineProps<{
   showBorders?: boolean
   // students list
   students?: Array<{ name: string; list?: string }>
+  // edit permissions
+  editable?: boolean
+  // furniture/objects in room
+  objects?: Array<{ id: string; type: 'locker'|'computer'|'desk'|'custom'; x: number; y: number; w: number; h: number; label?: string }>
 }>()
 
 const emit = defineEmits<{
@@ -59,6 +63,8 @@ const spacing = computed(() => props.spacing ?? 18)
 type Seat = { id: string; x: number; y: number; w: number; h: number; label?: string; status?: 'ok'|'reservado'|'indisponivel' }
 const seats = ref<Seat[]>([])
 const teacher = ref<{ x: number; y: number; w: number; h: number }>({ x: 24, y: 24, w: 42, h: 42 })
+type Furniture = { id: string; type: 'locker'|'computer'|'desk'|'custom'; x: number; y: number; w: number; h: number; label?: string }
+const furniture = ref<Furniture[]>([])
 
 const backgroundColor = ref(props.backgroundColor ?? '#ffffff')
 const borderColor = 'rgba(23,24,30,0.1)'
@@ -165,6 +171,27 @@ const drawTeacher = (c: CanvasRenderingContext2D, hovered: boolean) => {
   c.restore()
 }
 
+const drawFurniture = (c: CanvasRenderingContext2D, f: Furniture, hovered: boolean, selected: boolean) => {
+  c.save()
+  let color = '#64748b' // default
+  if (f.type === 'locker') color = '#6b7280'
+  if (f.type === 'computer') color = '#0ea5e9'
+  if (f.type === 'desk') color = '#92400e'
+  c.fillStyle = hovered || selected ? 'rgba(59,130,246,0.8)' : color
+  c.strokeStyle = 'rgba(23,24,30,0.2)'
+  c.lineWidth = 1
+  roundRect(c, f.x, f.y, f.w, f.h, 8)
+  c.fill(); c.stroke()
+  if (f.label) {
+    c.fillStyle = '#ffffff'
+    c.font = 'bold 11px system-ui'
+    c.textAlign = 'center'
+    c.textBaseline = 'middle'
+    c.fillText(f.label, f.x + f.w/2, f.y + f.h/2)
+  }
+  c.restore()
+}
+
 const isInside = (px: number, py: number, r: { x: number; y: number; w: number; h: number }) => (
   px >= r.x && px <= r.x + r.w && py >= r.y && py <= r.y + r.h
 )
@@ -181,6 +208,8 @@ const render = () => {
   drawGrid(c)
   const hover = currentHover()
   seats.value.forEach((s, i) => drawSeat(c, s, !!(hover && hover.type === 'seat' && hover.index === i), selection.includes(i), i))
+  // furniture first (below seats)
+  furniture.value.forEach((f, i) => drawFurniture(c, f, !!(hover && hover.type === 'object' && hover.index === i), false))
   drawTeacher(c, hover?.type === 'teacher')
   if (boxSelect) {
     c.save()
@@ -192,10 +221,14 @@ const render = () => {
   }
 }
 
-const currentHover = (): null | { type: 'seat' | 'teacher'; index: number } => {
+const currentHover = (): null | { type: 'seat' | 'teacher' | 'object'; index: number } => {
   if (!mouse) return null
   const t = teacher.value
   if (isInside(mouse.x, mouse.y, t)) return { type: 'teacher', index: 0 }
+  for (let i = furniture.value.length - 1; i >= 0; i--) {
+    const f = furniture.value[i]
+    if (isInside(mouse.x, mouse.y, f)) return { type: 'object', index: i }
+  }
   for (let i = seats.value.length - 1; i >= 0; i--) {
     if (isInside(mouse.x, mouse.y, seats.value[i])) return { type: 'seat', index: i }
   }
@@ -213,6 +246,7 @@ const onMouseMove = (e: MouseEvent) => {
     canvasRef.value.style.cursor = h ? 'pointer' : 'default'
   }
   if (dragging) {
+    if (props.editable === false) { dragging = null; return }
     if (dragging.type === 'teacher') {
       // bound within canvas
       const nx = snap(mouse.x - dragging.offsetX)
@@ -220,12 +254,19 @@ const onMouseMove = (e: MouseEvent) => {
       teacher.value.x = clamp(nx, 0, canvasWidth - teacher.value.w)
       teacher.value.y = clamp(ny, 0, canvasHeight - teacher.value.h)
       emit('update:teacher', { x: teacher.value.x, y: teacher.value.y })
-    } else {
+    } else if (dragging.type === 'seat') {
       const s = seats.value[dragging.index]
       const nx = snap(mouse.x - dragging.offsetX)
       const ny = snap(mouse.y - dragging.offsetY)
       s.x = clamp(nx, 0, canvasWidth - s.w)
       s.y = clamp(ny, 0, canvasHeight - s.h)
+      emit('update:seats', seats.value.map(se => ({ id: se.id, x: se.x, y: se.y, label: se.label, status: se.status })))
+    } else if (dragging.type === 'object') {
+      const f = furniture.value[dragging.index]
+      const nx = snap(mouse.x - dragging.offsetX)
+      const ny = snap(mouse.y - dragging.offsetY)
+      f.x = clamp(nx, 0, canvasWidth - f.w)
+      f.y = clamp(ny, 0, canvasHeight - f.h)
       emit('update:seats', seats.value.map(se => ({ id: se.id, x: se.x, y: se.y, label: se.label, status: se.status })))
     }
   }
@@ -234,12 +275,13 @@ const onMouseMove = (e: MouseEvent) => {
 
 const onMouseDown = (e: MouseEvent) => {
   onMouseMove(e)
+  if (props.editable === false) return
   const hover = currentHover()
   mouse.down = true
   if (hover) {
     if (hover.type === 'teacher') {
       dragging = { type: 'teacher', index: 0, offsetX: mouse.x - teacher.value.x, offsetY: mouse.y - teacher.value.y }
-    } else {
+    } else if (hover.type === 'seat') {
       // manage selection
       if (!selection.includes(hover.index)) {
         if (!isShift(e)) selection = []
@@ -247,6 +289,9 @@ const onMouseDown = (e: MouseEvent) => {
       }
       const s = seats.value[hover.index]
       dragging = { type: 'seat', index: hover.index, offsetX: mouse.x - s.x, offsetY: mouse.y - s.y }
+    } else if (hover.type === 'object') {
+      const f = furniture.value[hover.index]
+      dragging = { type: 'object', index: hover.index, offsetX: mouse.x - f.x, offsetY: mouse.y - f.y }
     }
   } else {
     // start box selection
@@ -289,6 +334,7 @@ const rectsOverlap = (a: { x: number; y: number; w: number; h: number }, b: { x:
 const clamp = (v:number, min:number, max:number) => Math.min(max, Math.max(min, v))
 
 const onKeyDown = (e: KeyboardEvent) => {
+  if (props.editable === false) return
   if (e.key === 'Delete' || e.key === 'Backspace') {
     if (selection.length) {
       seats.value = seats.value.filter((_, idx) => !selection.includes(idx))
@@ -306,6 +352,8 @@ onMounted(() => {
   if (!context) return
   ctx.value = context
   buildLayout()
+  // load furniture from props
+  furniture.value = Array.isArray(props.objects) ? props.objects.map(o => ({ ...o })) : []
   render()
   canvas.addEventListener('mousemove', onMouseMove)
   canvas.addEventListener('mousedown', onMouseDown)
@@ -329,6 +377,12 @@ watch(() => [props.rows, props.cols, props.groupMode, seatSize.value, spacing.va
   buildLayout()
   render()
 })
+// react to objects changes
+watch(() => props.objects, (v) => {
+  furniture.value = Array.isArray(v) ? v.map(x => ({ ...x })) : []
+  render()
+}, { deep: true })
+
 
 // react to prop changes for visuals and teacher area
 watch(() => props.backgroundColor, (v) => { if (v) { backgroundColor.value = v; render() } })
@@ -544,7 +598,40 @@ function printMap() {
   win.print()
 }
 
-defineExpose({ rotateSelection, deleteSelection, saveLayout, loadLayout, exportPng, exportCsv, printMap, distribute })
+function addObject(type:'locker'|'computer'|'desk'|'custom', w=64, h=40, label?:string) {
+  if (props.editable === false) return
+  const id = `${type}-${Date.now()}`
+  const obj: Furniture = { id, type, x: 20, y: 20, w, h, label }
+  furniture.value.push(obj)
+  render()
+}
+
+function removeAllObjects() {
+  if (props.editable === false) return
+  furniture.value = []
+  render()
+}
+
+function saveLayout() {
+  const data = { seats: seats.value, teacher: teacher.value, furniture: furniture.value }
+  localStorage.setItem('sum-map-layout', JSON.stringify(data))
+}
+
+function loadLayout() {
+  const raw = localStorage.getItem('sum-map-layout')
+  if (!raw) return
+  try {
+    const data = JSON.parse(raw)
+    if (Array.isArray(data.seats) && data.teacher) {
+      seats.value = data.seats
+      teacher.value = data.teacher
+      furniture.value = Array.isArray(data.furniture) ? data.furniture : []
+      render()
+    }
+  } catch {}
+}
+
+defineExpose({ rotateSelection, deleteSelection, saveLayout, loadLayout, exportPng, exportCsv, printMap, distribute, addObject, removeAllObjects })
 
 </script>
 
